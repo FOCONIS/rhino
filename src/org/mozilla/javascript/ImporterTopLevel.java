@@ -275,9 +275,7 @@ public class ImporterTopLevel extends TopLevel {
             // when used as top scope importPackage and importClass are global
             // function that ignore thisObj. We use the the top level scope
             // which might not be the same as 'this' when used shared scopes
-            scope = ScriptableObject.getTopLevelScope(scope);
-        } else {
-            scope = thisObj;
+            thisObj = ScriptableObject.getTopLevelScope(scope);
         }
         return ensureType(thisObj, ScriptableObject.class, f);
     }
