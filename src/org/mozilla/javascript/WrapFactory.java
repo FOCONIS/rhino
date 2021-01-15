@@ -104,7 +104,7 @@ public class WrapFactory
      * Wrap Java object as Scriptable instance to allow full access to its
      * methods and fields from JavaScript.
      * <p>
-     * {@link #wrap(Context, Scriptable, Object, Class)} and
+     * {@link #wrap(Context, Scriptable, Object, Type)} and
      * {@link #wrapNewObject(Context, Scriptable, Object)} call this method
      * when they can not convert <code>javaObject</code> to JavaScript primitive
      * value or JavaScript array.
