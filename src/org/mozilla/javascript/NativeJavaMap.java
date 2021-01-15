@@ -96,9 +96,13 @@ public class NativeJavaMap extends NativeJavaObject {
         }
         
         Object ret = keyTranslationMap.get(key);
-        if (ret == null && translateNew) {
-            ret = Context.jsToJava(key, keyType);
-            keyTranslationMap.put(key, ret);
+        if (ret == null) {
+            if (translateNew) {
+                ret = Context.jsToJava(key, keyType);
+                keyTranslationMap.put(key, ret);
+            } else {
+                ret = key;
+            }
         }
         return ret;
     }
