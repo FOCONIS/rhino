@@ -61,6 +61,13 @@ public class NativeJavaMap extends NativeJavaObject {
 
     @Override
     public Object get(String name, Scriptable start) {
+        // first call "super" to access the methods implemented in map.
+        // this makes it inpossible to override built-in methods like "clear()" and "size()"
+        // if you want to access them, you have to use "get('size')"
+        Object ret = super.get(name, start);
+        if (ret != UniqueTag.NOT_FOUND) {
+           return ret;
+        }
         Object key = toKey(name, false);
         if (map.containsKey(key)) {
             Context cx = Context.getContext();
@@ -70,7 +77,7 @@ public class NativeJavaMap extends NativeJavaObject {
             }
             return cx.getWrapFactory().wrap(cx, this, obj, obj.getClass());
         }
-        return super.get(name, start);
+        return UniqueTag.NOT_FOUND;
     }
 
     @Override
