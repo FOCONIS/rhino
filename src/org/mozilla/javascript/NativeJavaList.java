@@ -10,7 +10,7 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
-public class NativeJavaList extends NativeJavaObject implements ArrayScriptable {
+public class NativeJavaList extends NativeJavaObject {
 
     private static final long serialVersionUID = 6403865639690547921L;
 
@@ -60,12 +60,12 @@ public class NativeJavaList extends NativeJavaObject implements ArrayScriptable 
     @Override
     public Object get(int index, Scriptable start) {
         if (isWithValidIndex(index)) {
-            Context cx = Context.getContext();
+            Context cx = Context.getCurrentContext();
             Object obj = list.get(index);
-            if (obj == null) {
-                return null;
+            if (cx != null && obj != null) {
+                return cx.getWrapFactory().wrap(cx, this, obj, obj.getClass());
             }
-            return cx.getWrapFactory().wrap(cx, this, obj, obj.getClass());
+            return obj;
         }
         return Undefined.instance;
     }
@@ -99,7 +99,6 @@ public class NativeJavaList extends NativeJavaObject implements ArrayScriptable 
         }
     }
 
-    @Override
     public long getLength() {
         return list.size();
     }
