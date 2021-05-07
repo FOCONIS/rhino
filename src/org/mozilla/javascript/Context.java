@@ -2324,7 +2324,7 @@ public class Context implements Closeable {
     }
 
     protected Object compileImpl(
-            Scriptable scope, 
+            Scriptable scope,
             String sourceString,
             String sourceName,
             int lineno,

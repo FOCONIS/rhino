@@ -49,7 +49,7 @@ public class WrapFactory {
         if (obj == null || obj == Undefined.instance || obj instanceof Scriptable) {
             return obj;
         }
-        if (staticType instanceof Class && ((Class)staticType).isPrimitive()) {
+        if (staticType instanceof Class && ((Class) staticType).isPrimitive()) {
             if (staticType == Void.TYPE) return Undefined.instance;
             if (staticType == Character.TYPE) return Integer.valueOf(((Character) obj).charValue());
             return obj;
@@ -111,9 +111,8 @@ public class WrapFactory {
      *     class, staticType will be used instead.
      * @return the wrapped value which shall not be null
      */
-    public Scriptable wrapAsJavaObject(Context cx, Scriptable scope,
-                                       Object javaObject, Type staticType)
-    {
+    public Scriptable wrapAsJavaObject(
+            Context cx, Scriptable scope, Object javaObject, Type staticType) {
         if (javaObject instanceof List) {
             return new NativeJavaList(scope, javaObject, staticType);
         } else if (javaObject instanceof Map) {

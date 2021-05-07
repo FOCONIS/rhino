@@ -2823,13 +2823,11 @@ public class ScriptRuntime {
         return typeof(getObjectProp(val, id, cx));
     }
 
-    /**
-     * returns the raw type. Taken from google guice.
-     */
+    /** returns the raw type. Taken from google guice. */
     public static Class<?> getRawType(Type type) {
         if (type == null) {
             return null;
-            
+
         } else if (type instanceof Class<?>) {
             // Type is a normal class.
             return (Class<?>) type;
@@ -2847,22 +2845,23 @@ public class ScriptRuntime {
             return (Class<?>) rawType;
 
         } else if (type instanceof GenericArrayType) {
-            Type componentType = ((GenericArrayType) type)
-                    .getGenericComponentType();
+            Type componentType = ((GenericArrayType) type).getGenericComponentType();
             return Array.newInstance(getRawType(componentType), 0).getClass();
 
-        } else if (type instanceof TypeVariable
-                || type instanceof WildcardType) {
+        } else if (type instanceof TypeVariable || type instanceof WildcardType) {
             // We could use the variable's bounds, but that won't work if there
-            // are multiple. Having a raw type that's more general than 
+            // are multiple. Having a raw type that's more general than
             // necessary is okay.
             return Object.class;
 
         } else {
             String className = type.getClass().getName();
-            throw new IllegalArgumentException("Expected a Class, "
-                    + "ParameterizedType, or GenericArrayType, but <"
-                    + type + "> is of type " + className);
+            throw new IllegalArgumentException(
+                    "Expected a Class, "
+                            + "ParameterizedType, or GenericArrayType, but <"
+                            + type
+                            + "> is of type "
+                            + className);
         }
     }
 
