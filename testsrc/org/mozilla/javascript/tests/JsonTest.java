@@ -14,6 +14,8 @@ import java.util.Map;
 import java.util.UUID;
 import junit.framework.TestCase;
 import org.junit.Test;
+import org.mozilla.javascript.JavaToJSONConverters;
+import org.mozilla.javascript.NativeObject;
 import org.mozilla.javascript.ScriptableObject;
 
 /*
@@ -151,9 +153,10 @@ public class JsonTest extends TestCase {
     private void testIt(String script, Object obj, String expected) {
         Utils.runWithAllOptimizationLevels(
                 cx -> {
+                    cx.setJavaToJSONConverter(JavaToJSONConverters.STRING_ISO_DATE);
                     final ScriptableObject scope = cx.initStandardObjects();
-                    Map<String, Object> map = new HashMap<>();
-                    map.put("x", obj);
+                    NativeObject map = new NativeObject();
+                    map.put("x", map, cx.getWrapFactory().wrap(cx, scope, obj, obj.getClass()));
                     scope.put("obj", scope, map);
                     Object o = cx.evaluateString(scope, script, "testJavaArrayIterate.js", 1, null);
                     assertEquals(expected, o);
