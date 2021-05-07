@@ -9,17 +9,14 @@ package org.mozilla.javascript;
 import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
-<<<<<<< HEAD
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
-=======
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.MathContext;
->>>>>>> upstream/master
 import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.Locale;

@@ -1649,26 +1649,6 @@ public class Context implements Closeable {
     }
 
     /**
-<<<<<<< HEAD
-     * Convenient method to convert java value to its closest representation
-     * in JavaScript.
-     * <p>
-     * If value is an instance of String, Number, Boolean, Function or
-     * Scriptable, it is returned as it and will be treated as the corresponding
-     * JavaScript type of string, number, boolean, function and object.
-     * <p>
-     * Note that for Number instances during any arithmetic operation in
-     * JavaScript the engine will always use the result of
-     * <code>Number.doubleValue()</code> resulting in a precision loss if
-     * the number can not fit into double.
-     * <p>
-     * If value is an instance of Character, it will be converted to string of
-     * length 1 and its JavaScript type will be string.
-     * <p>
-     * The rest of values will be wrapped as LiveConnect objects
-     * by calling {@link WrapFactory#wrap(Context cx, Scriptable scope,
-     * Object obj, Type staticType)} as in:
-=======
      * Convenient method to convert java value to its closest representation in JavaScript.
      *
      * <p>If value is an instance of String, Number, Boolean, Function or Scriptable, it is returned
@@ -1683,9 +1663,8 @@ public class Context implements Closeable {
      * JavaScript type will be string.
      *
      * <p>The rest of values will be wrapped as LiveConnect objects by calling {@link
-     * WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class staticType)} as in:
+     * WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Type staticType)} as in:
      *
->>>>>>> upstream/master
      * <pre>
      *    Context cx = Context.getCurrentContext();
      *    return cx.getWrapFactory().wrap(cx, scope, value, null);
@@ -1714,7 +1693,7 @@ public class Context implements Closeable {
      * JavaScript type will be string.
      *
      * <p>The rest of values will be wrapped as LiveConnect objects by calling {@link
-     * WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class staticType)} as in:
+     * WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Type staticType)} as in:
      *
      * <pre>
      *    return cx.getWrapFactory().wrap(cx, scope, value, null);
@@ -2344,18 +2323,8 @@ public class Context implements Closeable {
         return cx;
     }
 
-<<<<<<< HEAD
-    protected Object compileImpl(Scriptable scope,
-                               String sourceString, String sourceName, int lineno,
-                               Object securityDomain, boolean returnFunction,
-                               Evaluator compiler,
-                               ErrorReporter compilationErrorReporter)
-        throws IOException
-    {
-        if(sourceName == null) {
-=======
     protected Object compileImpl(
-            Scriptable scope,
+            Scriptable scope, 
             String sourceString,
             String sourceName,
             int lineno,
@@ -2365,7 +2334,6 @@ public class Context implements Closeable {
             ErrorReporter compilationErrorReporter)
             throws IOException {
         if (sourceName == null) {
->>>>>>> upstream/master
             sourceName = "unnamed script";
         }
         if (securityDomain != null && getSecurityController() == null) {
