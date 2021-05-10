@@ -23,6 +23,7 @@ final class NativeNumber extends IdScriptableObject {
 
     private static final int MAX_PRECISION = 100;
     private static final double MIN_SAFE_INTEGER = -MAX_SAFE_INTEGER;
+    private static final double EPSILON = 2.220446049250313e-16; // Math.pow(2, -52)
 
     static void init(Scriptable scope, boolean sealed) {
         NativeNumber obj = new NativeNumber(0.0);
@@ -52,13 +53,20 @@ final class NativeNumber extends IdScriptableObject {
         ctor.defineProperty("MIN_VALUE", ScriptRuntime.wrapNumber(Double.MIN_VALUE), attr);
         ctor.defineProperty("MAX_SAFE_INTEGER", ScriptRuntime.wrapNumber(MAX_SAFE_INTEGER), attr);
         ctor.defineProperty("MIN_SAFE_INTEGER", ScriptRuntime.wrapNumber(MIN_SAFE_INTEGER), attr);
+        ctor.defineProperty("EPSILON", ScriptRuntime.wrapNumber(EPSILON), attr);
 
         addIdFunctionProperty(ctor, NUMBER_TAG, ConstructorId_isFinite, "isFinite", 1);
         addIdFunctionProperty(ctor, NUMBER_TAG, ConstructorId_isNaN, "isNaN", 1);
         addIdFunctionProperty(ctor, NUMBER_TAG, ConstructorId_isInteger, "isInteger", 1);
         addIdFunctionProperty(ctor, NUMBER_TAG, ConstructorId_isSafeInteger, "isSafeInteger", 1);
-        addIdFunctionProperty(ctor, NUMBER_TAG, ConstructorId_parseFloat, "parseFloat", 1);
-        addIdFunctionProperty(ctor, NUMBER_TAG, ConstructorId_parseInt, "parseInt", 1);
+        Object parseFloat = ScriptRuntime.getTopLevelProp(ctor, "parseFloat");
+        if (parseFloat instanceof IdFunctionObject) {
+            ((IdFunctionObject) parseFloat).addAsProperty(ctor);
+        }
+        Object parseInt = ScriptRuntime.getTopLevelProp(ctor, "parseInt");
+        if (parseInt instanceof IdFunctionObject) {
+            ((IdFunctionObject) parseInt).addAsProperty(ctor);
+        }
 
         super.fillConstructorProperties(ctor);
     }
@@ -236,12 +244,6 @@ final class NativeNumber extends IdScriptableObject {
                 }
                 return Boolean.FALSE;
 
-            case ConstructorId_parseFloat:
-                return NativeGlobal.js_parseFloat(args);
-
-            case ConstructorId_parseInt:
-                return NativeGlobal.js_parseInt(args);
-
             default:
                 throw new IllegalArgumentException(String.valueOf(id));
         }
@@ -369,8 +371,6 @@ final class NativeNumber extends IdScriptableObject {
             ConstructorId_isNaN = -2,
             ConstructorId_isInteger = -3,
             ConstructorId_isSafeInteger = -4,
-            ConstructorId_parseFloat = -5,
-            ConstructorId_parseInt = -6,
             Id_constructor = 1,
             Id_toString = 2,
             Id_toLocaleString = 3,
