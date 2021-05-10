@@ -16,6 +16,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.mozilla.javascript.Context;
+import org.mozilla.javascript.ContextFactory;
 import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
 
@@ -124,6 +125,13 @@ public class JavaMapIteratorTest {
 
     private void testJavaMap(String script, Object expected) {
         Utils.runWithAllOptimizationLevels(
+                new ContextFactory() {
+                    @Override
+                    protected boolean hasFeature(Context cx, int featureIndex) {
+                        return super.hasFeature(cx, featureIndex) 
+                                || featureIndex== Context.FEATURE_ENABLE_JAVA_MAP_ACCESS;
+                    }
+                },
                 cx -> {
                     cx.setLanguageVersion(Context.VERSION_ES6);
                     final ScriptableObject scope = cx.initStandardObjects();

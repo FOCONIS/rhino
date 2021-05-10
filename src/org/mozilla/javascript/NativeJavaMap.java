@@ -55,7 +55,8 @@ public class NativeJavaMap extends NativeJavaObject {
     public boolean has(String name, Scriptable start) {
         Context cx = Context.getCurrentContext();
         if (cx != null && cx.hasFeature(Context.FEATURE_ENABLE_JAVA_MAP_ACCESS)) {
-            if (map.containsKey(name)) {
+            Object key = toKey(name, false);
+            if (map.containsKey(key)) {
                 return true;
             }
         }
@@ -66,7 +67,8 @@ public class NativeJavaMap extends NativeJavaObject {
     public boolean has(int index, Scriptable start) {
         Context cx = Context.getCurrentContext();
         if (cx != null && cx.hasFeature(Context.FEATURE_ENABLE_JAVA_MAP_ACCESS)) {
-            if (map.containsKey(Integer.valueOf(index))) {
+            Object key = toKey(Integer.valueOf(index), false);
+            if (map.containsKey(key)) {
                 return true;
             }
         }
@@ -85,21 +87,23 @@ public class NativeJavaMap extends NativeJavaObject {
     public Object get(String name, Scriptable start) {
         Context cx = Context.getCurrentContext();
         if (cx != null && cx.hasFeature(Context.FEATURE_ENABLE_JAVA_MAP_ACCESS)) {
-            if (map.containsKey(name)) {
-                Object obj = map.get(name);
-                return cx.getWrapFactory().wrap(cx, this, obj, obj.getClass());
+            Object key = toKey(name, false);
+            if (map.containsKey(key)) {
+                Object obj = map.get(key);
+                return cx.getWrapFactory().wrap(cx, this, obj, obj == null ? null : obj.getClass());
             }
         }
-        return UniqueTag.NOT_FOUND;
+        return super.get(name, start);
     }
 
     @Override
     public Object get(int index, Scriptable start) {
         Context cx = Context.getCurrentContext();
         if (cx != null && cx.hasFeature(Context.FEATURE_ENABLE_JAVA_MAP_ACCESS)) {
-            if (map.containsKey(Integer.valueOf(index))) {
-                Object obj = map.get(Integer.valueOf(index));
-                return cx.getWrapFactory().wrap(cx, this, obj, obj.getClass());
+            Object key = toKey(Integer.valueOf(index), false);
+            if (map.containsKey(key)) {
+                Object obj = map.get(key);
+                return cx.getWrapFactory().wrap(cx, this, obj, obj == null ? null : obj.getClass());
             }
         }
         return super.get(index, start);
@@ -168,7 +172,8 @@ public class NativeJavaMap extends NativeJavaObject {
     public void put(String name, Scriptable start, Object value) {
         Context cx = Context.getCurrentContext();
         if (cx != null && cx.hasFeature(Context.FEATURE_ENABLE_JAVA_MAP_ACCESS)) {
-            map.put(name, Context.jsToJava(value, Object.class));
+            Object key = toKey(name, true);
+            map.put(key, toValue(value));
         } else {
             super.put(name, start, value);
         }
@@ -178,7 +183,8 @@ public class NativeJavaMap extends NativeJavaObject {
     public void put(int index, Scriptable start, Object value) {
         Context cx = Context.getContext();
         if (cx != null && cx.hasFeature(Context.FEATURE_ENABLE_JAVA_MAP_ACCESS)) {
-            map.put(Integer.valueOf(index), Context.jsToJava(value, Object.class));
+            Object key = toKey(Integer.valueOf(index), true);
+            map.put(key, toValue(value));
         } else {
             super.put(index, start, value);
         }
