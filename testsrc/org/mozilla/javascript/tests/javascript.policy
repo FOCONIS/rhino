@@ -1,0 +1,15 @@
+// Sample script, how to define different security codebases for javaScript.
+grant codebase "file:${user.dir}/bin/main/ALLOW_FILE_IO_JAVASCRIPT" {
+    permission java.lang.RuntimePermission "visibleToScripts.java.io";
+    permission java.io.FilePermission "tmp", "read";
+};
+
+grant codebase "file:${user.dir}/bin/main/ALLOW_LOGGER_JAVASCRIPT" {
+    permission java.lang.RuntimePermission "visibleToScripts.java.util.logging";
+};
+
+grant {
+    // grant every script access to java.lang and java.util (but not to java.util.*)
+    permission java.lang.RuntimePermission "visibleToScripts.java.lang";
+    permission java.lang.RuntimePermission "visibleToScripts.java.util";
+};
