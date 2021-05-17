@@ -7,19 +7,24 @@
 
 package org.mozilla.javascript.tests;
 
+import java.util.List;
 import java.io.FilePermission;
+import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.AccessControlContext;
 import java.security.AccessControlException;
 import java.security.CodeSource;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.Permission;
 import java.security.Permissions;
 import java.security.Policy;
 import java.security.ProtectionDomain;
 import java.security.URIParameter;
+import java.util.Calendar;
+import java.util.Collection;
 import java.util.Enumeration;
 import java.util.PropertyPermission;
 import java.util.function.Function;
@@ -29,6 +34,7 @@ import org.junit.Test;
 import org.mozilla.javascript.ClassShutter;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.ContextFactory;
+import org.mozilla.javascript.EcmaError;
 import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.SecurityController;
 import org.mozilla.javascript.tools.shell.Global;
@@ -42,6 +48,7 @@ import junit.framework.TestCase;
 public class SecurityControllerTest extends TestCase {
 
     private static ProtectionDomain UNTRUSTED_JAVASCRIPT;
+    private static ProtectionDomain ALLOW_SECURITY;
     private static ProtectionDomain ALLOW_FILE_IO_JAVASCRIPT;
     private static ProtectionDomain ALLOW_LOGGER_JAVASCRIPT;
     protected final Global global = new Global();
@@ -86,6 +93,7 @@ public class SecurityControllerTest extends TestCase {
             UNTRUSTED_JAVASCRIPT = createProtectionDomain(policy, "UNTRUSTED_JAVASCRIPT");
             ALLOW_FILE_IO_JAVASCRIPT = createProtectionDomain(policy, "ALLOW_FILE_IO_JAVASCRIPT");
             ALLOW_LOGGER_JAVASCRIPT = createProtectionDomain(policy, "ALLOW_LOGGER_JAVASCRIPT");
+            ALLOW_SECURITY = createProtectionDomain(policy, "ALLOW_SECURITY");
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -137,6 +145,51 @@ public class SecurityControllerTest extends TestCase {
         runScript("java.util.logging.Logger.getLogger('foo').toString()", ALLOW_LOGGER_JAVASCRIPT);
     }
 
+    public void testSecure2() {
+//        try {
+//            runScript("com.example.securitytest.SomeFactory.TEST", UNTRUSTED_JAVASCRIPT);
+//            fail("AccessControlException expected");
+//        } catch (AccessControlException ace) { }
+//        try {
+//            runScript("f = new com.example.securitytest.SomeFactory()", UNTRUSTED_JAVASCRIPT);
+//            fail("AccessControlException expected");
+//        } catch (AccessControlException ace) { }
+//        runScript("f = new com.example.securitytest.SomeFactory(); var i = f.create(); i.size(), i.foo(); i.bar();", null);
+        try {
+            runScript("f = new com.example.securitytest.SomeFactory(); var i = f.create(); i.size(); i.foo(); i.bar();", ALLOW_SECURITY);
+            fail("EcmaError expected");
+        } catch (EcmaError ee) {
+            assertEquals("TypeError: Cannot find function bar in object []. (#1)", ee.getMessage());
+        }
+    }
+    public void testSecure() {
+        try {
+            runScript("com.example.securitytest.SomeFactory.TEST", UNTRUSTED_JAVASCRIPT);
+            fail("AccessControlException expected");
+        } catch (AccessControlException ace) { }
+        try {
+            runScript("f = new com.example.securitytest.SomeFactory(); var i = f.create(); i.clear();", ALLOW_SECURITY);
+            fail("EcmaError expected");
+        } catch (EcmaError ee) {
+            assertEquals("TypeError: Cannot find function clear in object []. (#1)", ee.getMessage());
+        }
+
+    }
+    
+    public void testCalendarAccessTrusted() {
+        runScript("var c = java.util.Calendar.getInstance(); c.toZonedDateTime()", null);
+    }
+
+    public void testAccessJavaSecurity() {
+        runScript("var c = java.security.MessageDigest.getInstance('MD5');",
+                ALLOW_SECURITY);
+        try {
+            runScript("var c = java.security.MessageDigest.getInstance('MD5');",
+                    ALLOW_FILE_IO_JAVASCRIPT);
+            fail("AccessControlException expected");
+        } catch (AccessControlException ace) {
+        }
+    }
     /**
      * This classShutter checks the "visibelToScripts.{pkg}" runtime property, which can be defined in a policy file.
      * Note: Every other code in your stack-chain will need this permission also. 
@@ -145,16 +198,42 @@ public class SecurityControllerTest extends TestCase {
 
         @Override
         public boolean visibleToScripts(String fullClassName) {
-            int idx = fullClassName.lastIndexOf('.');
-            if (idx != -1) {
-                SecurityManager sm = System.getSecurityManager();
-                if (sm != null) {
+            SecurityManager sm = System.getSecurityManager();
+            if (sm != null) {
+                int idx = fullClassName.lastIndexOf('.');
+                if (idx != -1) {
+                    String pkg = fullClassName.substring(0,idx);
                     sm.checkPermission(new RuntimePermission(
-                            "visibleToScripts." + fullClassName.substring(0, idx)));
+                            "rhino.visible." + pkg));
                 }
             }
-            // thows AccessControlException, if package is not visible.
             return true;
+        }
+        
+        @Override
+        public void checkAccessible(Class<?> clazz) {
+            SecurityManager sm = System.getSecurityManager();
+            if (sm != null) {
+                sm.checkPermission(new RuntimePermission(
+                        "rhino.accessible." + clazz.getPackage().getName()));
+            }
+        }
+        public boolean isUsable(Class<?> clazz, Collection<Method> methods) {
+            for (Method m : methods) {
+                if (!m.getDeclaringClass().getPackage().getName().equals("java.lang")) {
+                    return true;
+                }
+            }
+            return false;
+       }
+        
+        @Override
+        public boolean visibleToScripts(Class<?> clazz, Method method) {
+            if (List.class.isAssignableFrom(clazz) && method.getName().equals("clear")) {
+                return false;
+            } else {
+                return true;
+            }
         }
     }
     
@@ -167,8 +246,7 @@ public class SecurityControllerTest extends TestCase {
             context.setClassShutter(new PolicyClassShutter());
             Scriptable scope = context.initStandardObjects(global);
             
-            context.evaluateString(scope, scriptSourceText, "", 1, pd);
-            return null;
+            return context.evaluateString(scope, scriptSourceText, "", 1, pd);
         });
     }
 }

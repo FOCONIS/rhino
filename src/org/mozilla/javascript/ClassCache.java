@@ -23,7 +23,7 @@ public class ClassCache implements Serializable
     private static final long serialVersionUID = -8866246036237312215L;
     private static final Object AKEY = "ClassCache";
     private volatile boolean cachingIsEnabled = true;
-    private transient Map<Class<?>,JavaMembers> classTable;
+    private transient Map<JavaMembers.CacheKey,JavaMembers> classTable;
     private transient Map<JavaAdapter.JavaAdapterSignature,Class<?>> classAdapterCache;
     private transient Map<Class<?>,Object> interfaceAdapterCache;
     private int generatedClassSerial;
@@ -126,11 +126,11 @@ public class ClassCache implements Serializable
     /**
      * @return a map from classes to associated JavaMembers objects
      */
-    Map<Class<?>,JavaMembers> getClassCacheMap() {
+    Map<JavaMembers.CacheKey, JavaMembers> getClassCacheMap() {
         if (classTable == null) {
             // Use 1 as concurrency level here and for other concurrent hash maps
             // as we don't expect high levels of sustained concurrent writes.
-            classTable = new ConcurrentHashMap<Class<?>,JavaMembers>(16, 0.75f, 1);
+            classTable = new ConcurrentHashMap<JavaMembers.CacheKey,JavaMembers>(16, 0.75f, 1);
         }
         return classTable;
     }
