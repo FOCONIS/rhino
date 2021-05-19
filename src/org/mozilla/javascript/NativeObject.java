@@ -55,6 +55,12 @@ public class NativeObject extends IdScriptableObject implements Map
         if (Context.getCurrentContext().version >= Context.VERSION_ES6) {
             addIdFunctionProperty(ctor, OBJECT_TAG, ConstructorId_setPrototypeOf,
                     "setPrototypeOf", 2);
+            addIdFunctionProperty(ctor, OBJECT_TAG, ConstructorId_entries,
+                    "entries", 1);
+            addIdFunctionProperty(ctor, OBJECT_TAG, ConstructorId_fromEntries,
+                    "fromEntries", 1);
+            addIdFunctionProperty(ctor, OBJECT_TAG, ConstructorId_values,
+                    "values", 1);
         }
         addIdFunctionProperty(ctor, OBJECT_TAG, ConstructorId_keys,
                 "keys", 1);
@@ -368,6 +374,61 @@ public class NativeObject extends IdScriptableObject implements Map
                   ids[i] = ScriptRuntime.toString(ids[i]);
                 }
                 return cx.newArray(scope, ids);
+              }
+
+          case ConstructorId_entries:
+              {
+                  Object arg = args.length < 1 ? Undefined.instance : args[0];
+                  Scriptable obj = getCompatibleObject(cx, scope, arg);
+                  Object[] ids = obj.getIds();
+                  for (int i = 0; i < ids.length; i++) {
+                      if (ids[i] instanceof Integer) {
+                          Integer key = (Integer) ids[i]; 
+                          ids[i] = cx.newArray(scope, new Object[]{ key, obj.get(key, scope) });
+                      } else {
+                          String key = ScriptRuntime.toString(ids[i]);
+                          ids[i] = cx.newArray(scope, new Object[]{ key, obj.get(key, scope) });
+                      }
+                  }
+                  return cx.newArray(scope, ids);
+              }
+          case ConstructorId_fromEntries:
+              {
+                  Object arg = args.length < 1 ? Undefined.instance : args[0];
+                  Scriptable obj = getCompatibleObject(cx, scope, arg);
+                  Object enumeration = ScriptRuntime.enumInit(obj, cx, scope, ScriptRuntime.ENUMERATE_VALUES_IN_ORDER);
+                  obj = cx.newObject(scope);
+                  while (ScriptRuntime.enumNext(enumeration)) {
+                      Scriptable entry = ensureScriptable(ScriptRuntime.enumId(enumeration, cx));
+                      Object key = entry.get(0, entry);
+                      if (key == Scriptable.NOT_FOUND) {
+                          key = Undefined.instance;
+                      }
+                      Object value = entry.get(1, entry);
+                      if (value == Scriptable.NOT_FOUND) {
+                          value = Undefined.instance;
+                      }
+                      if (key instanceof Integer) {
+                          obj.put((Integer)key, obj, value);
+                      } else {
+                          obj.put(ScriptRuntime.toString(key), obj, value);
+                      }
+                  }
+                  return obj;
+              }
+          case ConstructorId_values:
+              {
+                  Object arg = args.length < 1 ? Undefined.instance : args[0];
+                  Scriptable obj = getCompatibleObject(cx, scope, arg);
+                  Object[] ids = obj.getIds();
+                  for (int i = 0; i < ids.length; i++) {
+                      if (ids[i] instanceof Integer) {
+                          ids[i] = obj.get((Integer) ids[i], scope);
+                      } else {
+                          ids[i] = obj.get(ScriptRuntime.toString(ids[i]), scope);
+                      }
+                  }
+                  return cx.newArray(scope, ids);
               }
           case ConstructorId_getOwnPropertyNames:
               {
