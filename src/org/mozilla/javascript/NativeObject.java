@@ -14,6 +14,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.Map.Entry;
 
 import org.mozilla.javascript.ScriptRuntime.StringIdOrIndex;
 
@@ -676,7 +677,47 @@ public class NativeObject extends IdScriptableObject implements Map
         throw new UnsupportedOperationException();
     }
 
+    public boolean equals(Object o) {
+        if (o == this)
+            return true;
 
+        if (!(o instanceof Map))
+            return false;
+        Map<?,?> m = (Map<?,?>) o;
+        if (m.size() != size())
+            return false;
+
+        try {
+            Iterator<Entry<Object, Object>> i = entrySet().iterator();
+            while (i.hasNext()) {
+                Entry<Object, Object> e = i.next();
+                Object key = e.getKey();
+                Object value = e.getValue();
+                if (value == null) {
+                    if (!(m.get(key)==null && m.containsKey(key)))
+                        return false;
+                } else {
+                    if (!value.equals(m.get(key)))
+                        return false;
+                }
+            }
+        } catch (ClassCastException unused) {
+            return false;
+        } catch (NullPointerException unused) {
+            return false;
+        }
+
+        return true;
+    }
+    
+    public int hashCode() {
+        int h = 0;
+        Iterator<Entry<Object, Object>> i = entrySet().iterator();
+        while (i.hasNext())
+            h += i.next().hashCode();
+        return h;
+    }
+    
     class EntrySet extends AbstractSet<Entry<Object, Object>> {
         @Override
         public Iterator<Entry<Object, Object>> iterator() {
@@ -902,7 +943,11 @@ public class NativeObject extends IdScriptableObject implements Map
         ConstructorId_getOwnPropertySymbols = -14,
         ConstructorId_assign = -15,
         ConstructorId_is = -16,
+        // ES6
         ConstructorId_setPrototypeOf = -17,
+        ConstructorId_entries = -18,
+        ConstructorId_fromEntries = -19,
+        ConstructorId_values = -20,
 
         Id_constructor           = 1,
         Id_toString              = 2,
