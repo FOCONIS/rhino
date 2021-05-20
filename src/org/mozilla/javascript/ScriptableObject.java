@@ -3046,7 +3046,7 @@ public abstract class ScriptableObject implements Scriptable,
         }
     }
 
-    private static final Comparator<Object> KEY_COMPARATOR = new KeyComparator();
+    public static final Comparator<Object> KEY_COMPARATOR = new KeyComparator();
 
     /**
      * This comparator sorts property fields in spec-compliant order. Numeric ids first, in numeric

@@ -40,7 +40,6 @@ public class NativeJavaList extends NativeJavaObject {
         return "JavaList";
     }
 
-
     @Override
     public boolean has(int index, Scriptable start) {
         if (isWithValidIndex(index)) {
@@ -94,15 +93,11 @@ public class NativeJavaList extends NativeJavaObject {
                 ((ArrayList<?>) list).ensureCapacity(minCapacity);
             }
             while (minCapacity > list.size()) {
-              list.add(null);
+                list.add(null);
             }
         }
     }
 
-    public long getLength() {
-        return list.size();
-    }
-    
     @Override
     public Object[] getIds() {
         List<?> list = (List<?>) javaObject;
@@ -115,6 +110,6 @@ public class NativeJavaList extends NativeJavaObject {
     }
 
     private boolean isWithValidIndex(int index) {
-        return index >= 0  && index < list.size();
+        return index >= 0 && index < list.size();
     }
 }

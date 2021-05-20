@@ -51,7 +51,7 @@ public class Test262SuiteTest {
 
     private static final File testDir = new File("test262/test");
     private static final String testHarnessDir = "test262/harness/";
-    private static final String testProperties = "testsrc/test262.properties";
+    private static final String testProperties;
 
     static Map<Integer, Map<String, Script>> HARNESS_SCRIPT_CACHE = new HashMap<>();
     static Map<File, Integer> EXCLUDED_TESTS = new LinkedHashMap<>();
@@ -90,6 +90,7 @@ public class Test262SuiteTest {
                             "Symbol.matchAll",
                             "tail-call-optimization",
                             "json-superset",
+                            "hashbang",
                             "u180e"));
 
     static {
@@ -100,6 +101,10 @@ public class Test262SuiteTest {
         } else {
             OPT_LEVELS = new int[] {-1, 0, 9};
         }
+
+        String propFile = System.getProperty("test262properties");
+        testProperties =
+                propFile != null && !propFile.equals("") ? propFile : "testsrc/test262.properties";
     }
 
     private static String getOverriddenLevel() {
@@ -190,22 +195,24 @@ public class Test262SuiteTest {
         cx.setOptimizationLevel(optLevel);
         cx.setGeneratingDebug(true);
         try {
-            Scriptable scope;
+            boolean failedEarly = false;
             try {
-                scope = buildScope(cx);
-            } catch (Exception ex) {
-                throw new RuntimeException("Failed to build a scope with the harness files.", ex);
-            }
+                Scriptable scope;
+                try {
+                    scope = buildScope(cx);
+                } catch (Exception ex) {
+                    throw new RuntimeException(
+                            "Failed to build a scope with the harness files.", ex);
+                }
 
-            String str = testCase.source;
-            int line = 1;
-            if (useStrict) {
-                str = "\"use strict\";\n" + str;
-                line--;
-            }
+                String str = testCase.source;
+                int line = 1;
+                if (useStrict) {
+                    str = "\"use strict\";\n" + str;
+                    line--;
+                }
 
-            boolean failedEarly = true;
-            try {
+                failedEarly = true;
                 Script caseScript = cx.compileString(str, testFilePath, line, null);
 
                 failedEarly = false; // not after this line

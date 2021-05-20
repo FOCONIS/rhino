@@ -1195,10 +1195,16 @@ class BodyCodegen {
                             cfw.add(ByteCode.DADD);
                             break;
                         case Node.LEFT:
-                            addOptRuntimeInvoke("add", "(DLjava/lang/Object;)Ljava/lang/Object;");
+                            cfw.addALoad(contextLocal);
+                            addOptRuntimeInvoke(
+                                    "add",
+                                    "(DLjava/lang/Object;Lorg/mozilla/javascript/Context;)Ljava/lang/Object;");
                             break;
                         case Node.RIGHT:
-                            addOptRuntimeInvoke("add", "(Ljava/lang/Object;D)Ljava/lang/Object;");
+                            cfw.addALoad(contextLocal);
+                            addOptRuntimeInvoke(
+                                    "add",
+                                    "(Ljava/lang/Object;DLorg/mozilla/javascript/Context;)Ljava/lang/Object;");
                             break;
                         default:
                             cfw.addALoad(contextLocal);
@@ -1233,16 +1239,29 @@ class BodyCodegen {
                 break;
 
             case Token.POS:
-                generateExpression(child, node);
-                addObjectToDouble();
-                addDoubleWrap();
-                break;
+                {
+                    int childNumberFlag = node.getIntProp(Node.ISNUMBER_PROP, -1);
+                    generateExpression(child, node);
+                    if (childNumberFlag == -1) {
+                        addObjectToDouble();
+                        addDoubleWrap();
+                    }
+                    break;
+                }
 
             case Token.NEG:
-                generateExpression(child, node);
-                addObjectToNumeric();
-                addScriptRuntimeInvoke("negate", "(Ljava/lang/Number;" + ")Ljava/lang/Number;");
-                break;
+                {
+                    int childNumberFlag = node.getIntProp(Node.ISNUMBER_PROP, -1);
+                    generateExpression(child, node);
+                    if (childNumberFlag == -1) {
+                        addObjectToNumeric();
+                        addScriptRuntimeInvoke(
+                                "negate", "(Ljava/lang/Number;" + ")Ljava/lang/Number;");
+                    } else {
+                        cfw.add(ByteCode.DNEG);
+                    }
+                    break;
+                }
 
             case Token.TO_DOUBLE:
                 // cnvt to double (not Double)
