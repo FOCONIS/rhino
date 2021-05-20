@@ -2349,28 +2349,6 @@ public class NativeArray extends IdScriptableObject implements List {
         };
     }
 
-    // same hashCode and equals as AbstractList, so that this.equals(arrayList) ==
-    // arrayList.equals(this)
-    public int hashCode() {
-        int hashCode = 1;
-        for (Object e : this) hashCode = 31 * hashCode + (e == null ? 0 : e.hashCode());
-        return hashCode;
-    }
-
-    public boolean equals(Object o) {
-        if (o == this) return true;
-        if (!(o instanceof List)) return false;
-
-        ListIterator<Object> e1 = listIterator();
-        ListIterator<?> e2 = ((List<?>) o).listIterator();
-        while (e1.hasNext() && e2.hasNext()) {
-            Object o1 = e1.next();
-            Object o2 = e2.next();
-            if (!(o1 == null ? o2 == null : o1.equals(o2))) return false;
-        }
-        return !(e1.hasNext() || e2.hasNext());
-    }
-
     @Override
     protected int findPrototypeId(Symbol k) {
         if (SymbolKey.ITERATOR.equals(k)) {

@@ -6,6 +6,9 @@
 package org.mozilla.javascript;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -13,6 +16,7 @@ import java.util.Map;
 public class NativeJavaMap extends NativeJavaObject {
 
     private Map<Object, Object> map;
+    private transient Map<String, Object> keyTranslation;
 
     static void init(ScriptableObject scope, boolean sealed) {
         NativeJavaMapIterator.init(scope, sealed);
@@ -34,7 +38,7 @@ public class NativeJavaMap extends NativeJavaObject {
     public boolean has(String name, Scriptable start) {
         Context cx = Context.getCurrentContext();
         if (cx != null && cx.hasFeature(Context.FEATURE_ENABLE_JAVA_MAP_ACCESS)) {
-            if (map.containsKey(name)) {
+            if (map.containsKey(translate(name))) {
                 return true;
             }
         }
@@ -45,7 +49,8 @@ public class NativeJavaMap extends NativeJavaObject {
     public boolean has(int index, Scriptable start) {
         Context cx = Context.getCurrentContext();
         if (cx != null && cx.hasFeature(Context.FEATURE_ENABLE_JAVA_MAP_ACCESS)) {
-            if (map.containsKey(Integer.valueOf(index))) {
+            if (map.containsKey(Integer.valueOf(index))
+                    || map.containsKey(translate(String.valueOf(index)))) {
                 return true;
             }
         }
@@ -64,9 +69,10 @@ public class NativeJavaMap extends NativeJavaObject {
     public Object get(String name, Scriptable start) {
         Context cx = Context.getCurrentContext();
         if (cx != null && cx.hasFeature(Context.FEATURE_ENABLE_JAVA_MAP_ACCESS)) {
-            if (map.containsKey(name)) {
-                Object obj = map.get(name);
-                return cx.getWrapFactory().wrap(cx, this, obj, obj == null ? null : obj.getClass());
+            Object key = translate(name);
+            if (map.containsKey(key)) {
+                Object obj = map.get(key);
+                return wrap(cx, obj);
             }
         }
         return super.get(name, start);
@@ -76,9 +82,15 @@ public class NativeJavaMap extends NativeJavaObject {
     public Object get(int index, Scriptable start) {
         Context cx = Context.getCurrentContext();
         if (cx != null && cx.hasFeature(Context.FEATURE_ENABLE_JAVA_MAP_ACCESS)) {
-            if (map.containsKey(Integer.valueOf(index))) {
-                Object obj = map.get(Integer.valueOf(index));
-                return cx.getWrapFactory().wrap(cx, this, obj, obj == null ? null : obj.getClass());
+            Object key = Integer.valueOf(index);
+            if (map.containsKey(key)) {
+                Object obj = map.get(key);
+                return wrap(cx, obj);
+            }
+            key = translate(String.valueOf(index));
+            if (map.containsKey(key)) {
+                Object obj = map.get(key);
+                return wrap(cx, obj);
             }
         }
         return super.get(index, start);
@@ -117,16 +129,74 @@ public class NativeJavaMap extends NativeJavaObject {
         Context cx = Context.getCurrentContext();
         if (cx != null && cx.hasFeature(Context.FEATURE_ENABLE_JAVA_MAP_ACCESS)) {
             List<Object> ids = new ArrayList<>(map.size());
+            keyTranslation = null;
+            initKeyTranslation();
             for (Object key : map.keySet()) {
-                if (key instanceof Integer) {
-                    ids.add((Integer) key);
+                if (key instanceof Number) {
+                    double d = ((Number) key).doubleValue();
+                    int index = (int) d;
+                    if (index == d) {
+                        ids.add(index);
+                    } else {
+                        ids.add(ScriptRuntime.toString(key));
+                    }
                 } else {
                     ids.add(ScriptRuntime.toString(key));
                 }
             }
-            return ids.toArray();
+            Object[] result = ids.toArray();
+            if (cx.hasFeature(Context.FEATURE_ENUMERATE_IDS_FIRST)) {
+                // Move all the numeric IDs to the front in numeric order
+                Arrays.sort(result, ScriptableObject.KEY_COMPARATOR);
+            }
+            return result;
         }
         return super.getIds();
+    }
+
+    /*
+     * The getIds() method will convert all Map keys to String, respectively Integer.
+     * If the map has keys other than String or Integer, (e.g. EnumMap) you cannot
+     * retrieve the value with 'javaMap.get(key)'. To handle this, we remember all
+     * converted keys by getIds() and translate them back in the 'get' operation.
+     *
+     * Note: these kind of maps may only be readable.
+     */
+    private Object translate(String jsKey) {
+        initKeyTranslation();
+        return keyTranslation.getOrDefault(jsKey, jsKey);
+    }
+
+    private void initKeyTranslation() {
+        if (keyTranslation == null) {
+            if (requiresKeyTranslation()) {
+                keyTranslation = new HashMap<>();
+                for (Object key : map.keySet()) {
+                    Object old = keyTranslation.put(ScriptRuntime.toString(key), key);
+                    if (old != null) {
+                        String oldType = old.getClass().getName();
+                        String keyType = key == null ? "null" : key.getClass().getName();
+                        Context.reportWarning("Key '" + old + "' (Type:" + oldType +
+                                ") and '" + key + "' (Type: " + keyType + ") are ambiguous in NativeJavaMap");
+                    }
+                }
+            } else {
+                keyTranslation = Collections.emptyMap();
+            }
+        }
+    }
+
+    private boolean requiresKeyTranslation() {
+        for (Object key : map.keySet()) {
+            if (!(key instanceof String)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private Object wrap(Context cx, Object obj) {
+        return cx.getWrapFactory().wrap(cx, this, obj, obj == null ? null : obj.getClass());
     }
 
     private static Callable symbol_iterator =
@@ -134,7 +204,7 @@ public class NativeJavaMap extends NativeJavaObject {
                 if (!(thisObj instanceof NativeJavaMap)) {
                     throw ScriptRuntime.typeErrorById("msg.incompat.call", SymbolKey.ITERATOR);
                 }
-                return new NativeJavaMapIterator(scope, ((NativeJavaMap) thisObj).map);
+                return new NativeJavaMapIterator(scope, (NativeJavaMap) thisObj);
             };
 
     private static final class NativeJavaMapIterator extends ES6Iterator {
@@ -150,9 +220,10 @@ public class NativeJavaMap extends NativeJavaObject {
             super();
         }
 
-        NativeJavaMapIterator(Scriptable scope, Map<Object, Object> map) {
+        NativeJavaMapIterator(Scriptable scope, NativeJavaMap javaMap) {
             super(scope, ITERATOR_TAG);
-            this.iterator = map.entrySet().iterator();
+            this.javaMap = javaMap;
+            this.iterator = javaMap.map.entrySet().iterator();
         }
 
         @Override
@@ -171,7 +242,9 @@ public class NativeJavaMap extends NativeJavaObject {
                 return cx.newArray(scope, new Object[] {Undefined.instance, Undefined.instance});
             }
             Map.Entry e = iterator.next();
-            return cx.newArray(scope, new Object[] {e.getKey(), e.getValue()});
+            Object key = javaMap.wrap(cx, e.getKey());
+            Object value = javaMap.wrap(cx, e.getValue());
+            return cx.newArray(scope, new Object[] {key, value});
         }
 
         @Override
@@ -180,5 +253,6 @@ public class NativeJavaMap extends NativeJavaObject {
         }
 
         private Iterator<Map.Entry<Object, Object>> iterator;
+        private NativeJavaMap javaMap;
     }
 }

@@ -384,10 +384,10 @@ public class NativeObject extends IdScriptableObject implements Map
                   for (int i = 0; i < ids.length; i++) {
                       if (ids[i] instanceof Integer) {
                           Integer key = (Integer) ids[i]; 
-                          ids[i] = cx.newArray(scope, new Object[]{ key, obj.get(key, scope) });
+                          ids[i] = cx.newArray(scope, new Object[]{ ids[i], obj.get(key, scope) });
                       } else {
                           String key = ScriptRuntime.toString(ids[i]);
-                          ids[i] = cx.newArray(scope, new Object[]{ key, obj.get(key, scope) });
+                          ids[i] = cx.newArray(scope, new Object[]{ ids[i], obj.get(key, scope) });
                       }
                   }
                   return cx.newArray(scope, ids);
@@ -738,47 +738,6 @@ public class NativeObject extends IdScriptableObject implements Map
         throw new UnsupportedOperationException();
     }
 
-    public boolean equals(Object o) {
-        if (o == this)
-            return true;
-
-        if (!(o instanceof Map))
-            return false;
-        Map<?,?> m = (Map<?,?>) o;
-        if (m.size() != size())
-            return false;
-
-        try {
-            Iterator<Entry<Object, Object>> i = entrySet().iterator();
-            while (i.hasNext()) {
-                Entry<Object, Object> e = i.next();
-                Object key = e.getKey();
-                Object value = e.getValue();
-                if (value == null) {
-                    if (!(m.get(key)==null && m.containsKey(key)))
-                        return false;
-                } else {
-                    if (!value.equals(m.get(key)))
-                        return false;
-                }
-            }
-        } catch (ClassCastException unused) {
-            return false;
-        } catch (NullPointerException unused) {
-            return false;
-        }
-
-        return true;
-    }
-    
-    public int hashCode() {
-        int h = 0;
-        Iterator<Entry<Object, Object>> i = entrySet().iterator();
-        while (i.hasNext())
-            h += i.next().hashCode();
-        return h;
-    }
-    
     class EntrySet extends AbstractSet<Entry<Object, Object>> {
         @Override
         public Iterator<Entry<Object, Object>> iterator() {
