@@ -7,17 +7,15 @@
 
 package com.example.securitytest.impl;
 
+import com.example.securitytest.SomeInterface;
 import java.util.ArrayList;
 
-import com.example.securitytest.SomeInterface;
-
 /**
- * Provides an implementation for SomeInterface. Defines two methods:
- * <code>foo</code> overridden (defined by interface) and <code>bar</code>
- * defined at this class.
- * 
- * If this class is excluded by the shutter, the method <code>bar</code> should
- * not be accessible in scripts.
+ * Provides an implementation for SomeInterface. Defines two methods: <code>foo</code> overridden
+ * (defined by interface) and <code>bar</code> defined at this class.
+ *
+ * <p>If this class is excluded by the shutter, the method <code>bar</code> should not be accessible
+ * in scripts.
  *
  * @author Roland Praml, FOCONIS AG
  */

@@ -15,7 +15,7 @@ public class NativeJavaList extends NativeJavaObject {
     private static final long serialVersionUID = 6403865639690547921L;
 
     private List<Object> list;
-    
+
     private Class<?> valueType;
 
     @SuppressWarnings("unchecked")

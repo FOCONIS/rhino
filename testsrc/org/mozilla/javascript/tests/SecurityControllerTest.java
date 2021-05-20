@@ -7,44 +7,29 @@
 
 package org.mozilla.javascript.tests;
 
-import java.util.List;
-import java.io.FilePermission;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
-import java.net.URISyntaxException;
 import java.net.URL;
-import java.security.AccessControlContext;
 import java.security.AccessControlException;
 import java.security.CodeSource;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.security.Permission;
 import java.security.Permissions;
 import java.security.Policy;
 import java.security.ProtectionDomain;
 import java.security.URIParameter;
-import java.util.Calendar;
 import java.util.Collection;
 import java.util.Enumeration;
-import java.util.PropertyPermission;
-import java.util.function.Function;
-import java.util.logging.Logger;
-
+import java.util.List;
+import junit.framework.TestCase;
 import org.junit.Test;
 import org.mozilla.javascript.ClassShutter;
-import org.mozilla.javascript.Context;
-import org.mozilla.javascript.ContextFactory;
 import org.mozilla.javascript.EcmaError;
 import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.SecurityController;
 import org.mozilla.javascript.tools.shell.Global;
 import org.mozilla.javascript.tools.shell.JavaPolicySecurity;
 
-import junit.framework.TestCase;
-
-/**
- * Perform some tests when we have a securityController in place. 
- */
+/** Perform some tests when we have a securityController in place. */
 public class SecurityControllerTest extends TestCase {
 
     private static ProtectionDomain UNTRUSTED_JAVASCRIPT;
@@ -53,9 +38,7 @@ public class SecurityControllerTest extends TestCase {
     private static ProtectionDomain ALLOW_LOGGER_JAVASCRIPT;
     protected final Global global = new Global();
 
-    /**
-     * Sets up the security manager and loads the "grant-all-java.policy".
-     */
+    /** Sets up the security manager and loads the "grant-all-java.policy". */
     static void setupSecurityManager() {
         URL url = SecurityControllerTest.class.getResource("grant-all-java.policy");
         if (url != null) {
@@ -67,10 +50,9 @@ public class SecurityControllerTest extends TestCase {
         SecurityController.initGlobal(new JavaPolicySecurity());
     }
 
-    /**
-     * Creates a new protectionDomain with the given Code-Source Suffix.
-     */
-    static ProtectionDomain createProtectionDomain(Policy policy, String csSuffix) throws MalformedURLException {
+    /** Creates a new protectionDomain with the given Code-Source Suffix. */
+    static ProtectionDomain createProtectionDomain(Policy policy, String csSuffix)
+            throws MalformedURLException {
         URL url = new URL(SecurityController.class.getResource("/"), csSuffix);
         CodeSource cs = new CodeSource(url, (java.security.cert.Certificate[]) null);
         Permissions perms = new Permissions();
@@ -81,10 +63,8 @@ public class SecurityControllerTest extends TestCase {
         perms.setReadOnly();
         return new ProtectionDomain(cs, perms, null, null);
     }
-    
-    /**
-     * Setup the security.
-     */
+
+    /** Setup the security. */
     static {
         setupSecurityManager();
         try {
@@ -108,91 +88,105 @@ public class SecurityControllerTest extends TestCase {
         try {
             runScript("new java.io.File('tmp').exists()", UNTRUSTED_JAVASCRIPT);
             fail("AccessControlException expected");
-        } catch (AccessControlException ace) { }
+        } catch (AccessControlException ace) {
+        }
     }
-    
+
     public void testFileAccessAllowFileIo() {
         runScript("new java.io.File('tmp').exists()", ALLOW_FILE_IO_JAVASCRIPT);
     }
-    
+
     @Test(expected = AccessControlException.class)
     public void testFileAccessAllowLogger() {
         try {
             runScript("new java.io.File('tmp').exists()", ALLOW_LOGGER_JAVASCRIPT);
             fail("AccessControlException expected");
-        } catch (AccessControlException ace) { }
+        } catch (AccessControlException ace) {
+        }
     }
-    
+
     public void testLoggerAccessTrusted() {
         runScript("java.util.logging.Logger.getLogger('foo').toString()", null);
     }
-    
+
     public void testLoggerAccessUntrusted() {
         try {
             runScript("java.util.logging.Logger.getLogger('foo').toString()", UNTRUSTED_JAVASCRIPT);
             fail("AccessControlException expected");
-        } catch (AccessControlException ace) { }
+        } catch (AccessControlException ace) {
+        }
     }
-    
+
     public void testLoggerAccessAllowFileIo() {
         try {
-            runScript("java.util.logging.Logger.getLogger('foo').toString()", ALLOW_FILE_IO_JAVASCRIPT);
+            runScript(
+                    "java.util.logging.Logger.getLogger('foo').toString()",
+                    ALLOW_FILE_IO_JAVASCRIPT);
             fail("AccessControlException expected");
-        } catch (AccessControlException ace) { }
+        } catch (AccessControlException ace) {
+        }
     }
-    
+
     public void testLoggerAccessAllowLogger() {
         runScript("java.util.logging.Logger.getLogger('foo').toString()", ALLOW_LOGGER_JAVASCRIPT);
     }
 
     public void testSecure2() {
-//        try {
-//            runScript("com.example.securitytest.SomeFactory.TEST", UNTRUSTED_JAVASCRIPT);
-//            fail("AccessControlException expected");
-//        } catch (AccessControlException ace) { }
-//        try {
-//            runScript("f = new com.example.securitytest.SomeFactory()", UNTRUSTED_JAVASCRIPT);
-//            fail("AccessControlException expected");
-//        } catch (AccessControlException ace) { }
-//        runScript("f = new com.example.securitytest.SomeFactory(); var i = f.create(); i.size(), i.foo(); i.bar();", null);
+        //        try {
+        //            runScript("com.example.securitytest.SomeFactory.TEST", UNTRUSTED_JAVASCRIPT);
+        //            fail("AccessControlException expected");
+        //        } catch (AccessControlException ace) { }
+        //        try {
+        //            runScript("f = new com.example.securitytest.SomeFactory()",
+        // UNTRUSTED_JAVASCRIPT);
+        //            fail("AccessControlException expected");
+        //        } catch (AccessControlException ace) { }
+        //        runScript("f = new com.example.securitytest.SomeFactory(); var i = f.create();
+        // i.size(), i.foo(); i.bar();", null);
         try {
-            runScript("f = new com.example.securitytest.SomeFactory(); var i = f.create(); i.size(); i.foo(); i.bar();", ALLOW_SECURITY);
+            runScript(
+                    "f = new com.example.securitytest.SomeFactory(); var i = f.create(); i.size(); i.foo(); i.bar();",
+                    ALLOW_SECURITY);
             fail("EcmaError expected");
         } catch (EcmaError ee) {
             assertEquals("TypeError: Cannot find function bar in object []. (#1)", ee.getMessage());
         }
     }
+
     public void testSecure() {
         try {
             runScript("com.example.securitytest.SomeFactory.TEST", UNTRUSTED_JAVASCRIPT);
             fail("AccessControlException expected");
-        } catch (AccessControlException ace) { }
+        } catch (AccessControlException ace) {
+        }
         try {
-            runScript("f = new com.example.securitytest.SomeFactory(); var i = f.create(); i.clear();", ALLOW_SECURITY);
+            runScript(
+                    "f = new com.example.securitytest.SomeFactory(); var i = f.create(); i.clear();",
+                    ALLOW_SECURITY);
             fail("EcmaError expected");
         } catch (EcmaError ee) {
-            assertEquals("TypeError: Cannot find function clear in object []. (#1)", ee.getMessage());
+            assertEquals(
+                    "TypeError: Cannot find function clear in object []. (#1)", ee.getMessage());
         }
-
     }
-    
+
     public void testCalendarAccessTrusted() {
         runScript("var c = java.util.Calendar.getInstance(); c.toZonedDateTime()", null);
     }
 
     public void testAccessJavaSecurity() {
-        runScript("var c = java.security.MessageDigest.getInstance('MD5');",
-                ALLOW_SECURITY);
+        runScript("var c = java.security.MessageDigest.getInstance('MD5');", ALLOW_SECURITY);
         try {
-            runScript("var c = java.security.MessageDigest.getInstance('MD5');",
+            runScript(
+                    "var c = java.security.MessageDigest.getInstance('MD5');",
                     ALLOW_FILE_IO_JAVASCRIPT);
             fail("AccessControlException expected");
         } catch (AccessControlException ace) {
         }
     }
     /**
-     * This classShutter checks the "visibelToScripts.{pkg}" runtime property, which can be defined in a policy file.
-     * Note: Every other code in your stack-chain will need this permission also. 
+     * This classShutter checks the "visibelToScripts.{pkg}" runtime property, which can be defined
+     * in a policy file. Note: Every other code in your stack-chain will need this permission also.
      */
     private static class PolicyClassShutter implements ClassShutter {
 
@@ -202,22 +196,22 @@ public class SecurityControllerTest extends TestCase {
             if (sm != null) {
                 int idx = fullClassName.lastIndexOf('.');
                 if (idx != -1) {
-                    String pkg = fullClassName.substring(0,idx);
-                    sm.checkPermission(new RuntimePermission(
-                            "rhino.visible." + pkg));
+                    String pkg = fullClassName.substring(0, idx);
+                    sm.checkPermission(new RuntimePermission("rhino.visible." + pkg));
                 }
             }
             return true;
         }
-        
+
         @Override
         public void checkAccessible(Class<?> clazz) {
             SecurityManager sm = System.getSecurityManager();
             if (sm != null) {
-                sm.checkPermission(new RuntimePermission(
-                        "rhino.accessible." + clazz.getPackage().getName()));
+                sm.checkPermission(
+                        new RuntimePermission("rhino.accessible." + clazz.getPackage().getName()));
             }
         }
+
         public boolean isUsable(Class<?> clazz, Collection<Method> methods) {
             for (Method m : methods) {
                 if (!m.getDeclaringClass().getPackage().getName().equals("java.lang")) {
@@ -225,8 +219,8 @@ public class SecurityControllerTest extends TestCase {
                 }
             }
             return false;
-       }
-        
+        }
+
         @Override
         public boolean visibleToScripts(Class<?> clazz, Method method) {
             if (List.class.isAssignableFrom(clazz) && method.getName().equals("clear")) {
@@ -236,17 +230,15 @@ public class SecurityControllerTest extends TestCase {
             }
         }
     }
-    
-    /**
-     * Compiles and runs the script with the given protection domain.
-     */
+
+    /** Compiles and runs the script with the given protection domain. */
     private void runScript(String scriptSourceText, ProtectionDomain pd) {
         Utils.runWithAllOptimizationLevels(
-        context -> {
-            context.setClassShutter(new PolicyClassShutter());
-            Scriptable scope = context.initStandardObjects(global);
-            
-            return context.evaluateString(scope, scriptSourceText, "", 1, pd);
-        });
+                context -> {
+                    context.setClassShutter(new PolicyClassShutter());
+                    Scriptable scope = context.initStandardObjects(global);
+
+                    return context.evaluateString(scope, scriptSourceText, "", 1, pd);
+                });
     }
 }

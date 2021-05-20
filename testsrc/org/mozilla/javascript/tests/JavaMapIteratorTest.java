@@ -128,8 +128,8 @@ public class JavaMapIteratorTest {
                 new ContextFactory() {
                     @Override
                     protected boolean hasFeature(Context cx, int featureIndex) {
-                        return super.hasFeature(cx, featureIndex) 
-                                || featureIndex== Context.FEATURE_ENABLE_JAVA_MAP_ACCESS;
+                        return super.hasFeature(cx, featureIndex)
+                                || featureIndex == Context.FEATURE_ENABLE_JAVA_MAP_ACCESS;
                     }
                 },
                 cx -> {

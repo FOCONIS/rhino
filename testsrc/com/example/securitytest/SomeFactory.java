@@ -7,7 +7,6 @@
 
 package com.example.securitytest;
 
-
 /**
  * TODO.
  *
@@ -23,7 +22,8 @@ public class SomeFactory {
 
     public SomeInterface create() {
         try {
-            return (SomeInterface) Class.forName("com.example.securitytest.impl.SomeClass").newInstance();
+            return (SomeInterface)
+                    Class.forName("com.example.securitytest.impl.SomeClass").newInstance();
         } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
             throw new RuntimeException("Could not create impl", e);
         }
