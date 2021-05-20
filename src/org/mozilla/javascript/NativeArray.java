@@ -2339,7 +2339,7 @@ public class NativeArray extends IdScriptableObject implements List {
 
             @Override
             public Object get(int index) {
-                return NativeArray.this.get(index - fromIndex);
+                return NativeArray.this.get(index + fromIndex);
             }
 
             @Override
