@@ -141,8 +141,10 @@ abstract class Icode {
             Icode_REG_BIGINT2 = -72,
             Icode_REG_BIGINT4 = -73,
 
+            // Object with computed properties
+            Icode_OBJECT_COMPUTED_PROPS = -74,
             // Last icode
-            MIN_ICODE = -73;
+            MIN_ICODE = -74;
 
     static String bytecodeName(int bytecode) {
         if (!validBytecode(bytecode)) {

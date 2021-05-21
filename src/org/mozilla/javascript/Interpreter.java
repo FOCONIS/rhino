@@ -2262,6 +2262,28 @@ public final class Interpreter extends Icode implements Evaluator {
                                     stack[stackTop] = val;
                                     continue Loop;
                                 }
+                            case Icode_OBJECT_COMPUTED_PROPS:
+                                {
+                                    Object[] computedProps = (Object[]) stack[stackTop];
+                                    --stackTop;
+                                    int[] computedPropsSetters = (int[]) stack[stackTop];
+                                    --stackTop;
+                                    Object[] data = (Object[]) stack[stackTop];
+                                    --stackTop;
+                                    int[] getterSetters = (int[]) stack[stackTop];
+                                    Object[] props = (Object[]) frame.idata.literalIds[indexReg];
+                                    int j = 0;
+                                    for (int i = 0; i < props.length; i++) {
+                                        if (props[i] instanceof Node) {
+                                            props[i] = computedProps[j++];
+                                        }
+                                    }
+                                    Object val =
+                                                ScriptRuntime.newObjectLiteral(
+                                                        props, data, getterSetters, cx, frame.scope);
+                                    stack[stackTop] = val;
+                                    continue Loop;
+                                }
                             case Icode_ENTERDQ:
                                 {
                                     Object lhs = stack[stackTop];

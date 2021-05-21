@@ -17,6 +17,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.ScriptableObject;
+import org.mozilla.javascript.tests.Utils;
 
 /** Test for NativeObject. */
 public class NativeObjectTest {
@@ -290,8 +291,33 @@ public class NativeObjectTest {
         map.put("2", "z");
         evaluateAndAssert("Object.fromEntries(Object.entries(['x','y','z']))", map);
     }
+    
+    @Test
+    public void testSymbolKey() {
+        // TODO: Write proper tests.
+        cx.setOptimizationLevel(0);
+        Object result =
+                cx.evaluateString(
+                        scope,
+                        "({[Symbol.iterator]:'foo'})[Symbol.iterator]",
+                        "test",
+                        1,
+                        null);
+
+        assertEquals("foo", result);
+        result =
+                cx.evaluateString(
+                        scope,
+                        "Object.keys({[4+Math.PI]:'foo'}).join(',')",
+                        "test",
+                        1,
+                        null);
+
+        assertEquals("7.141592653589793", result);
+    }
 
     private void evaluateAndAssert(String script, Object expected) {
+    
         Object result = cx.evaluateString(scope, script, "test", 1, null);
         assertEquals(expected, result);
     }
