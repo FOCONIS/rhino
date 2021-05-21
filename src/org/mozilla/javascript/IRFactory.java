@@ -1014,6 +1014,10 @@ public final class IRFactory extends Parser {
             double n = ((NumberLiteral) id).getNumber();
             decompiler.addNumber(n);
             key = ScriptRuntime.getIndexObject(n);
+        } else if (id instanceof AstNode) {
+            decompiler.addToken(Token.LB);
+            key = transform((AstNode) id);
+            decompiler.addToken(Token.RB);
         } else {
             throw Kit.codeBug();
         }

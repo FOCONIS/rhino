@@ -2018,7 +2018,7 @@ class BodyCodegen {
     }
 
     /** load array with property ids */
-    private void addLoadPropertyIds(Object[] properties, int count) {
+    private void addLoadPropertyIds(Node node, Object[] properties, int count) {
         addNewObjectArray(count);
         for (int i = 0; i != count; ++i) {
             cfw.add(ByteCode.DUP);
@@ -2026,9 +2026,17 @@ class BodyCodegen {
             Object id = properties[i];
             if (id instanceof String) {
                 cfw.addPush((String) id);
-            } else {
+            } else if (id instanceof Integer) {
                 cfw.addPush(((Integer) id).intValue());
                 addScriptRuntimeInvoke("wrapInt", "(I)Ljava/lang/Integer;");
+            } else {
+                Node child = (Node) id;
+                int childType = child.getType();
+                if (childType == Token.GET || childType == Token.SET || childType == Token.METHOD) {
+                    generateExpression(child.getFirstChild(), node);
+                } else {
+                    generateExpression(child, node);
+                }
             }
             cfw.add(ByteCode.AASTORE);
         }
@@ -2110,11 +2118,11 @@ class BodyCodegen {
             // TODO: this is actually only necessary if the yield operation is
             // a child of this object or its children (bug 757410)
             addLoadPropertyValues(node, child, count);
-            addLoadPropertyIds(properties, count);
+            addLoadPropertyIds(node, properties, count);
             // swap property-values and property-ids arrays
             cfw.add(ByteCode.SWAP);
         } else {
-            addLoadPropertyIds(properties, count);
+            addLoadPropertyIds(node, properties, count);
             addLoadPropertyValues(node, child, count);
         }
 

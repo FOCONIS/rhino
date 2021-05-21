@@ -1130,21 +1130,7 @@ class CodeGenerator extends Icode {
         addIndexOp(Icode_LITERAL_NEW, count);
         stackChange(2);
         while (child != null) {
-            int childType = child.getType();
-            if (childType == Token.GET) {
-                visitExpression(child.getFirstChild(), 0);
-                addIcode(Icode_LITERAL_GETTER);
-            } else if (childType == Token.SET) {
-                visitExpression(child.getFirstChild(), 0);
-                addIcode(Icode_LITERAL_SETTER);
-            } else if (childType == Token.METHOD) {
-                visitExpression(child.getFirstChild(), 0);
-                addIcode(Icode_LITERAL_SET);
-            } else {
-                visitExpression(child, 0);
-                addIcode(Icode_LITERAL_SET);
-            }
-            stackChange(-1);
+            visitLiteral(child);
             child = child.getNext();
         }
         if (type == Token.ARRAYLIT) {
@@ -1157,9 +1143,43 @@ class CodeGenerator extends Icode {
                 addIndexOp(Icode_SPARE_ARRAYLIT, index);
             }
         } else {
+            int computedProps = 0;
+            for (Object propertyId : propertyIds) {
+                if (propertyId instanceof Node) {
+                    computedProps++;
+                }
+            }
+            if (computedProps > 0) {
+                addIndexOp(Icode_LITERAL_NEW, computedProps);
+                stackChange(2);
+                for (Object propertyId : propertyIds) {
+                    if (propertyId instanceof Node) {
+                        visitLiteral((Node) propertyId);
+                    }
+                }
+                stackChange(-2);
+            }
             int index = literalIds.size();
             literalIds.add(propertyIds);
-            addIndexOp(Token.OBJECTLIT, index);
+            addIndexOp(computedProps == 0 ? Token.OBJECTLIT : Icode_OBJECT_COMPUTED_PROPS, index);
+        }
+        stackChange(-1);
+    }
+
+    private void visitLiteral(Node child) {
+        int childType = child.getType();
+        if (childType == Token.GET) {
+            visitExpression(child.getFirstChild(), 0);
+            addIcode(Icode_LITERAL_GETTER);
+        } else if (childType == Token.SET) {
+            visitExpression(child.getFirstChild(), 0);
+            addIcode(Icode_LITERAL_SETTER);
+        } else if (childType == Token.METHOD) {
+            visitExpression(child.getFirstChild(), 0);
+            addIcode(Icode_LITERAL_SET);
+        } else {
+            visitExpression(child, 0);
+            addIcode(Icode_LITERAL_SET);
         }
         stackChange(-1);
     }

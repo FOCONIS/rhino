@@ -4312,7 +4312,7 @@ public class ScriptRuntime {
                     ScriptableObject so = (ScriptableObject) object;
                     Callable getterOrSetter = (Callable) value;
                     boolean isSetter = getterSetter == 1;
-                    so.setGetterOrSetter((String) id, 0, getterOrSetter, isSetter);
+                    so.setGetterOrSetter(stringId, 0, getterOrSetter, isSetter);
                 }
             }
         }

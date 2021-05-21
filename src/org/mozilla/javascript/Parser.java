@@ -3425,11 +3425,19 @@ public class Parser {
                 if (afterComma != -1) warnTrailingComma(pos, elems, afterComma);
                 break commaLoop;
             }
-            AstNode pname = objliteralProperty();
+            AstNode pname;
+            if (tt == Token.LB) {
+                consumeToken();
+                pname = assignExpr();
+                mustMatchToken(Token.RB, "msg.bad.prop", true);
+                propertyName = "[" + pname.toSource() + "]";
+            } else {
+                pname = objliteralProperty();
+                propertyName = ts.getString();
+            }
             if (pname == null) {
                 reportError("msg.bad.prop");
             } else {
-                propertyName = ts.getString();
                 int ppos = ts.tokenBeg;
                 consumeToken();
 
@@ -3453,7 +3461,13 @@ public class Parser {
                         }
                     }
                     if (entryKind == GET_ENTRY || entryKind == SET_ENTRY) {
-                        pname = objliteralProperty();
+                        if (peeked == Token.LB) {
+                            consumeToken();
+                            pname = assignExpr();
+                            mustMatchToken(Token.RB, "msg.bad.prop", true);
+                        } else {
+                            pname = objliteralProperty();
+                        }
                         if (pname == null) {
                             reportError("msg.bad.prop");
                         }
