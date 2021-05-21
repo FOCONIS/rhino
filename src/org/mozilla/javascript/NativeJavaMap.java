@@ -208,6 +208,9 @@ public class NativeJavaMap extends NativeJavaObject {
 
     private Object translateOrCreate(String jsKey) {
         initKeyTranslation();
+        if (keyTranslation == Collections.EMPTY_MAP) {
+            keyTranslation = new HashMap<>();
+        }
         return keyTranslation.computeIfAbsent(jsKey, this::createKey);
     }
 
