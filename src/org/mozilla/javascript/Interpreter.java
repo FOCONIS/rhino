@@ -2279,8 +2279,8 @@ public final class Interpreter extends Icode implements Evaluator {
                                         }
                                     }
                                     Object val =
-                                                ScriptRuntime.newObjectLiteral(
-                                                        props, data, getterSetters, cx, frame.scope);
+                                            ScriptRuntime.newObjectLiteral(
+                                                    props, data, getterSetters, cx, frame.scope);
                                     stack[stackTop] = val;
                                     continue Loop;
                                 }

@@ -1183,8 +1183,6 @@ class CodeGenerator extends Icode {
         }
         stackChange(-1);
     }
-    
-
 
     private void visitArrayComprehension(Node node, Node initStmt, Node expr) {
         // A bit of a hack: array comprehensions are implemented using

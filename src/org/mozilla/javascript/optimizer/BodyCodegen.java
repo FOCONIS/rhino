@@ -2026,11 +2026,11 @@ class BodyCodegen {
             Object id = properties[i];
             if (id instanceof String) {
                 cfw.addPush((String) id);
-            } else if (id instanceof Integer){
+            } else if (id instanceof Integer) {
                 cfw.addPush(((Integer) id).intValue());
                 addScriptRuntimeInvoke("wrapInt", "(I)Ljava/lang/Integer;");
             } else {
-                Node child = (Node)id;
+                Node child = (Node) id;
                 int childType = child.getType();
                 if (childType == Token.GET || childType == Token.SET || childType == Token.METHOD) {
                     generateExpression(child.getFirstChild(), node);
