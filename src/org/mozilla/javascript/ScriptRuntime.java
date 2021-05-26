@@ -991,7 +991,8 @@ public class ScriptRuntime {
             if (val instanceof CharSequence) {
                 return val.toString();
             }
-            if (val instanceof BigInteger) {
+            if (val instanceof BigInteger
+                    || val instanceof Long) {
                 return val.toString();
             }
             if (val instanceof Number) {
@@ -4360,11 +4361,7 @@ public class ScriptRuntime {
                 ScriptableObject so = (ScriptableObject) object;
                 Callable getterOrSetter = (Callable) value;
                 boolean isSetter = getterSetter == 1;
-                // XXX: Do we have to handle Symbol here.
-                // This will be required, when conputedprops are supported.
-                String key = id instanceof String ? (String) id : null;
-                int index = key == null ? ((Integer) id).intValue() : 0;
-                so.setGetterOrSetter(key, index, getterOrSetter, isSetter);
+                so.setGetterOrSetter(id, getterOrSetter, isSetter);
             }
         }
         return object;

@@ -298,11 +298,9 @@ public class NativeObject extends IdScriptableObject implements Map {
                                 String.valueOf(args[0]));
                     }
                     ScriptableObject so = (ScriptableObject) thisObj;
-                    StringIdOrIndex s = ScriptRuntime.toStringIdOrIndex(cx, args[0]);
-                    int index = s.stringId != null ? 0 : s.index;
                     Callable getterOrSetter = (Callable) args[1];
                     boolean isSetter = (id == Id___defineSetter__);
-                    so.setGetterOrSetter(s.stringId, index, getterOrSetter, isSetter);
+                    so.setGetterOrSetter(args[0], getterOrSetter, isSetter);
                     if (so instanceof NativeArray) ((NativeArray) so).setDenseOnly(false);
                 }
                 return Undefined.instance;

@@ -537,13 +537,15 @@ public abstract class ScriptableObject
 
     /** Implement the legacy "__defineGetter__" and "__defineSetter__" methods. */
     public void setGetterOrSetter(
-            String name, int index, Callable getterOrSetter, boolean isSetter) {
-        if (name != null && index != 0) throw new IllegalArgumentException(name);
-        checkNotSealed(name, index);
+            Object nameOrSymbol, int index, Callable getterOrSetter, boolean isSetter) {
+        if (nameOrSymbol != null && index != 0) {
+            throw new IllegalArgumentException(ScriptRuntime.toString(nameOrSymbol));
+        }
+        checkNotSealed(nameOrSymbol, index);
 
         FunctionSlot fslot;
         if (isExtensible()) {
-            Slot slot = slotMap.modify(name, index, 0);
+            Slot slot = slotMap.modify(nameOrSymbol, index, 0);
             if (slot instanceof FunctionSlot) {
                 fslot = (FunctionSlot) slot;
             } else {
@@ -551,7 +553,7 @@ public abstract class ScriptableObject
                 slotMap.replace(slot, fslot);
             }
         } else {
-            Slot slot = slotMap.query(name, index);
+            Slot slot = slotMap.query(nameOrSymbol, index);
             if (slot instanceof FunctionSlot) {
                 fslot = (FunctionSlot) slot;
             } else {
@@ -561,7 +563,7 @@ public abstract class ScriptableObject
 
         int attributes = fslot.getAttributes();
         if ((attributes & READONLY) != 0) {
-            throw Context.reportRuntimeErrorById("msg.modify.readonly", name);
+            throw Context.reportRuntimeErrorById("msg.modify.readonly", nameOrSymbol);
         }
 
         if (isSetter) {
@@ -572,6 +574,19 @@ public abstract class ScriptableObject
         fslot.value = Undefined.instance;
     }
 
+    /** helper, as id can be a Symbol, Integer or something else */
+    public void setGetterOrSetter(Object id, Callable getterOrSetter, boolean isSetter) {
+        if (id instanceof Symbol) {
+            setGetterOrSetter(id, 0, getterOrSetter, isSetter);
+        } else if (id instanceof Integer) {
+            int index = ((Integer)id).intValue();
+            setGetterOrSetter(null, index, getterOrSetter, isSetter);
+        } else {
+            id = ScriptRuntime.toString(id);
+            setGetterOrSetter(id, 0, getterOrSetter, isSetter);
+        }
+    }
+    
     /**
      * Get the getter or setter for a given property. Used by __lookupGetter__ and __lookupSetter__.
      *
@@ -734,6 +749,32 @@ public abstract class ScriptableObject
 
     public static Object getDefaultValue(Scriptable object, Class<?> typeHint) {
         Context cx = null;
+        // see https://tc39.es/ecma262/#sec-toprimitive
+        Object v = getProperty(object, SymbolKey.TO_PRIMITIVE);
+        if (v != null) {
+            if (!(v instanceof Function)) {
+                throw ScriptRuntime.notFunctionError(object, SymbolKey.TO_PRIMITIVE);
+            }
+            Function fun = (Function) v;
+            String hint;
+            if (typeHint == null) {
+                hint = "default";
+            } else if (typeHint == ScriptRuntime.StringClass) {
+                hint = "string";
+            } else if (typeHint == ScriptRuntime.NumberClass) {
+                hint = "number";
+            } else {
+                throw ScriptRuntime.typeErrorById("msg.invalid.type", typeHint);
+            }
+            if (cx == null) {
+                cx = Context.getContext();
+            }
+            v = fun.call(cx, fun.getParentScope(), object, new Object[] { hint } );
+            if (!(v instanceof Scriptable)) {
+                return v;
+            }
+            throw ScriptRuntime.typeErrorById("msg.default.value", v);
+        }
         for (int i = 0; i < 2; i++) {
             boolean tryToString;
             if (typeHint == ScriptRuntime.StringClass) {
@@ -748,7 +789,7 @@ public abstract class ScriptableObject
             } else {
                 methodName = "valueOf";
             }
-            Object v = getProperty(object, methodName);
+            v = getProperty(object, methodName);
             if (!(v instanceof Function)) continue;
             Function fun = (Function) v;
             if (cx == null) {
