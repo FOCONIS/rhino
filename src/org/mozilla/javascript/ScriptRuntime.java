@@ -15,6 +15,7 @@ import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.ResourceBundle;
+import java.util.function.BiConsumer;
 import org.mozilla.javascript.ast.FunctionNode;
 import org.mozilla.javascript.v8dtoa.DoubleConversion;
 import org.mozilla.javascript.v8dtoa.FastDtoa;
@@ -2418,6 +2419,50 @@ public class ScriptRuntime {
     }
 
     /**
+     * This is used to handle all the special cases that are required when invoking
+     * Object.fromEntries or constructing a NativeMap or NativeWeakMap from an iterable.
+     *
+     * @param cx the current context
+     * @param scope the current scope
+     * @param arg1 the iterable object.
+     * @param setter the setter to set the value
+     * @return true, if arg1 was iterable.
+     */
+    public static boolean loadFromIterable(
+            Context cx, Scriptable scope, Object arg1, BiConsumer<Object, Object> setter) {
+        if ((arg1 == null) || Undefined.instance.equals(arg1)) {
+            return false;
+        }
+
+        // Call the "[Symbol.iterator]" property as a function.
+        final Object ito = ScriptRuntime.callIterator(arg1, cx, scope);
+        if (Undefined.instance.equals(ito)) {
+            // Per spec, ignore if the iterator is undefined
+            return false;
+        }
+
+        // Finally, run through all the iterated values and add them!
+        try (IteratorLikeIterable it = new IteratorLikeIterable(cx, scope, ito)) {
+            for (Object val : it) {
+                Scriptable sVal = ScriptableObject.ensureScriptable(val);
+                if (sVal instanceof Symbol) {
+                    throw ScriptRuntime.typeErrorById(
+                            "msg.arg.not.object", ScriptRuntime.typeof(sVal));
+                }
+                Object finalKey = sVal.get(0, sVal);
+                if (finalKey == Scriptable.NOT_FOUND) {
+                    finalKey = Undefined.instance;
+                }
+                Object finalVal = sVal.get(1, sVal);
+                if (finalVal == Scriptable.NOT_FOUND) {
+                    finalVal = Undefined.instance;
+                }
+                setter.accept(finalKey, finalVal);
+            }
+        }
+        return true;
+    }
+    /**
      * Prepare for calling name(...): return function corresponding to name and make current top
      * scope available as ScriptRuntime.lastStoredScriptable() for consumption as thisObj. The
      * caller must call ScriptRuntime.lastStoredScriptable() immediately after calling this method.
@@ -4289,31 +4334,37 @@ public class ScriptRuntime {
         Scriptable object = cx.newObject(scope);
         for (int i = 0, end = propertyIds.length; i != end; ++i) {
             Object id = propertyIds[i];
+
+            // -1 for property getter, 1 for property setter, 0 for a regular value property
             int getterSetter = getterSetters == null ? 0 : getterSetters[i];
             Object value = propertyValues[i];
-            if (id instanceof Symbol) {
-                Symbol sym = (Symbol) id;
-                SymbolScriptable so = (SymbolScriptable) object;
-                so.put(sym, object, value);
-            } else if (id instanceof Integer) {
-                int index = ((Integer) id).intValue();
-                object.put(index, object, value);
-            } else {
-                // we might get a computed double.
-                String stringId = ScriptRuntime.toString(id);
-                if (getterSetter == 0) {
+
+            if (getterSetter == 0) {
+                if (id instanceof Symbol) {
+                    Symbol sym = (Symbol) id;
+                    SymbolScriptable so = (SymbolScriptable) object;
+                    so.put(sym, object, value);
+                } else if (id instanceof Integer) {
+                    int index = ((Integer) id).intValue();
+                    object.put(index, object, value);
+                } else {
+                    String stringId = ScriptRuntime.toString(id);
                     if (isSpecialProperty(stringId)) {
                         Ref ref = specialRef(object, stringId, cx, scope);
                         ref.set(cx, scope, value);
                     } else {
                         object.put(stringId, object, value);
                     }
-                } else {
-                    ScriptableObject so = (ScriptableObject) object;
-                    Callable getterOrSetter = (Callable) value;
-                    boolean isSetter = getterSetter == 1;
-                    so.setGetterOrSetter(stringId, 0, getterOrSetter, isSetter);
                 }
+            } else {
+                ScriptableObject so = (ScriptableObject) object;
+                Callable getterOrSetter = (Callable) value;
+                boolean isSetter = getterSetter == 1;
+                // XXX: Do we have to handle Symbol here.
+                // This will be required, when conputedprops are supported.
+                String key = id instanceof String ? (String) id : null;
+                int index = key == null ? ((Integer) id).intValue() : 0;
+                so.setGetterOrSetter(key, index, getterOrSetter, isSetter);
             }
         }
         return object;
