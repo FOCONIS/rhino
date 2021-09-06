@@ -13,8 +13,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Function;
 import junit.framework.TestCase;
-
-import org.junit.Ignore;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.ContextFactory;
 import org.mozilla.javascript.EvaluatorException;
@@ -40,9 +38,14 @@ public class NativeJavaMapTest extends TestCase {
     public NativeJavaMapTest() {
         global.init(ContextFactory.getGlobal());
     }
-    
+
     public static enum MyEnum {
-      A, B, C, X, Y, Z
+        A,
+        B,
+        C,
+        X,
+        Y,
+        Z
     }
 
     public void testAccessingNullValues() {
@@ -63,60 +66,67 @@ public class NativeJavaMapTest extends TestCase {
         assertEquals(2, runScriptAsInt("value[1]", map, true));
         assertEquals(3, runScriptAsInt("value[2]", map, true));
     }
+
     public void testAccessingJavaMapLongValues() {
-      Map<Number, Number> map = new HashMap<>();
-      map.put(0L, 1);
-      map.put(1L, 2);
-      map.put(2L, 3);
-      
-      assertEquals(2, runScriptAsInt("value[1]", map, true));
-      assertEquals(3, runScriptAsInt("value[2]", map, true));
-      runScriptAsString("value[4] = 4.01", map, true);
-      assertEquals(Double.valueOf(4.01), map.get(4)); 
-      assertEquals(null, map.get(4L)); 
+        Map<Number, Number> map = new HashMap<>();
+        map.put(0L, 1);
+        map.put(1L, 2);
+        map.put(2L, 3);
+
+        assertEquals(2, runScriptAsInt("value[1]", map, true));
+        assertEquals(3, runScriptAsInt("value[2]", map, true));
+        runScriptAsString("value[4] = 4.01", map, true);
+        assertEquals(Double.valueOf(4.01), map.get(4));
+        assertEquals(null, map.get(4L));
     }
-    
+
     public void testAccessingJavaMapEnumValuesWithGeneric() {
-      // genrate inner class, that contains type information.
-      Map<MyEnum, Integer> map = new HashMap<MyEnum, Integer>() {
-        private static final long serialVersionUID = 1L;
-      };
-      
-      map.put(MyEnum.A, 1);
-      map.put(MyEnum.B, 2);
-      map.put(MyEnum.C, 3);
-      
-      assertEquals(2, runScriptAsInt("value['B']", map, true));
-      assertEquals(3, runScriptAsInt("value['C']", map, true));
-      runScriptAsString("value['X'] = 4.01", map, true);
-      // we know the type info and can convert the key to Long and the value is rounded to Integer
-      assertEquals(Integer.valueOf(4),map.get(MyEnum.X)); 
-      
-      try {
-        runScriptAsString("value['D'] = 4.0", map, true);
-        fail();;
-      } catch (IllegalArgumentException ex) {
-        assertEquals("No enum constant org.mozilla.javascript.tests.NativeJavaMapTest.MyEnum.D", ex.getMessage());
-      }
+        // genrate inner class, that contains type information.
+        Map<MyEnum, Integer> map =
+                new HashMap<MyEnum, Integer>() {
+                    private static final long serialVersionUID = 1L;
+                };
+
+        map.put(MyEnum.A, 1);
+        map.put(MyEnum.B, 2);
+        map.put(MyEnum.C, 3);
+
+        assertEquals(2, runScriptAsInt("value['B']", map, true));
+        assertEquals(3, runScriptAsInt("value['C']", map, true));
+        runScriptAsString("value['X'] = 4.01", map, true);
+        // we know the type info and can convert the key to Long and the value is rounded to Integer
+        assertEquals(Integer.valueOf(4), map.get(MyEnum.X));
+
+        try {
+            runScriptAsString("value['D'] = 4.0", map, true);
+            fail();
+            ;
+        } catch (IllegalArgumentException ex) {
+            assertEquals(
+                    "No enum constant org.mozilla.javascript.tests.NativeJavaMapTest.MyEnum.D",
+                    ex.getMessage());
+        }
     }
 
     public void testAccessingJavaMapLongValuesWithGeneric() {
-      // genrate inner class, that contains type information.
-      Map<Long, Integer> map = new HashMap<Long, Integer>() {
-        private static final long serialVersionUID = 1L;
-      };
-      
-      map.put(0L, 1);
-      map.put(1L, 2);
-      map.put(2L, 3);
-      
-      assertEquals(2, runScriptAsInt("value[1]", map, true));
-      assertEquals(3, runScriptAsInt("value[2]", map, true));
-      runScriptAsInt("value[4] = 4.0", map, true);
-      // we know the type info and can convert the key to Long and the value to Integer
-      assertEquals(Integer.valueOf(4),map.get(4L)); 
-      assertEquals(null, map.get(4));
+        // genrate inner class, that contains type information.
+        Map<Long, Integer> map =
+                new HashMap<Long, Integer>() {
+                    private static final long serialVersionUID = 1L;
+                };
+
+        map.put(0L, 1);
+        map.put(1L, 2);
+        map.put(2L, 3);
+
+        assertEquals(2, runScriptAsInt("value[1]", map, true));
+        assertEquals(3, runScriptAsInt("value[2]", map, true));
+        runScriptAsInt("value[4] = 4.0", map, true);
+        // we know the type info and can convert the key to Long and the value to Integer
+        assertEquals(Integer.valueOf(4), map.get(4L));
+        assertEquals(null, map.get(4));
     }
+
     public void testJavaMethodCalls() {
         Map<String, Number> map = new HashMap<>();
         map.put("a", 1);
@@ -204,25 +214,26 @@ public class NativeJavaMapTest extends TestCase {
     }
 
     public void testMethodOverwrite() {
-      Map<String, String> map = new HashMap<>();
+        Map<String, String> map = new HashMap<>();
 
-      map.put("size", "42");
-      map.put("clear", "foo");
+        map.put("size", "42");
+        map.put("clear", "foo");
 
-      NativeArray res = (NativeArray) runScript("Object.keys(value)", map, Function.identity(), true);
-      assertEquals(2, res.size());
-      assertTrue(res.contains("size"));
-      assertTrue(res.contains("clear"));
+        NativeArray res =
+                (NativeArray) runScript("Object.keys(value)", map, Function.identity(), true);
+        assertEquals(2, res.size());
+        assertTrue(res.contains("size"));
+        assertTrue(res.contains("clear"));
         // Call to overriden method not possible with enableJavaMapAccess
         //      String resStr = runScriptAsString("var size = value.size();\n"
         //          + "var getSize = value.get('size');\n"
         //          + "value.clear();\n" //it is impossible to call orignial size() and clear() here
         //          // CHEKCME: can we do that with JavaMap.prototype.clear.apply(value)
         //          + "[size, getSize]", map, true);
-        //      
+        //
         //      assertTrue(map.isEmpty()); // Object.keys always return Strings as key
         //      assertEquals("2,42", resStr);
-  }
+    }
 
     public void testJavaMapWithoutAccessEntries() {
         Map<Object, Object> map = new HashMap<>();

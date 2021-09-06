@@ -35,20 +35,23 @@ public class JavaToJSONConverters {
 
     /** Convert Object to its toString() value. */
     public static final UnaryOperator<Object> STRING = o -> o.toString();
-    
-    /** Convert Date/Time like objects to ISO-Date format and other objects to its toString() value. */
-    public static final UnaryOperator<Object> STRING_ISO_DATE = jo -> {
-        if (jo instanceof java.sql.Date) {
-            jo = ((java.sql.Date) jo).toLocalDate();
-        } else if (jo instanceof java.sql.Time) {
-            jo = ((java.sql.Time) jo).toLocalTime();
-        } else if (jo instanceof java.util.Date) {
-            jo = ((java.util.Date) jo).toInstant();
-        } else if (jo instanceof java.util.Calendar) {
-            jo = ((java.util.Calendar)jo).toInstant();
-        }
-        return jo.toString();
-    };
+
+    /**
+     * Convert Date/Time like objects to ISO-Date format and other objects to its toString() value.
+     */
+    public static final UnaryOperator<Object> STRING_ISO_DATE =
+            jo -> {
+                if (jo instanceof java.sql.Date) {
+                    jo = ((java.sql.Date) jo).toLocalDate();
+                } else if (jo instanceof java.sql.Time) {
+                    jo = ((java.sql.Time) jo).toLocalTime();
+                } else if (jo instanceof java.util.Date) {
+                    jo = ((java.util.Date) jo).toInstant();
+                } else if (jo instanceof java.util.Calendar) {
+                    jo = ((java.util.Calendar) jo).toInstant();
+                }
+                return jo.toString();
+            };
 
     /** Always return undefined */
     public static final UnaryOperator<Object> UNDEFINED = o -> Undefined.instance;
