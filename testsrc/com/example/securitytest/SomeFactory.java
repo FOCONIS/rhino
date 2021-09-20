@@ -8,17 +8,13 @@
 package com.example.securitytest;
 
 /**
- * TODO.
+ * Class for SecurityControllerTest.
  *
  * @author Roland Praml, FOCONIS AG
  */
 public class SomeFactory {
 
     public static int TEST = 42;
-
-    static {
-        System.out.println("Loaded");
-    }
 
     public SomeInterface create() {
         try {

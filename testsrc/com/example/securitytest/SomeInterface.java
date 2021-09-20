@@ -8,7 +8,7 @@
 package com.example.securitytest;
 
 /**
- * TODO.
+ * Class for SecurityControllerTest.
  *
  * @author Roland Praml, FOCONIS AG
  */

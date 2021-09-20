@@ -20,6 +20,7 @@ import java.util.ArrayList;
  * @author Roland Praml, FOCONIS AG
  */
 public class SomeClass extends ArrayList<String> implements SomeInterface {
+    private static final long serialVersionUID = 1L;
 
     @Override
     public String foo() {
