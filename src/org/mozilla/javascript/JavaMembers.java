@@ -15,7 +15,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.lang.reflect.Type;
 import java.security.AccessControlContext;
 import java.security.AllPermission;
 import java.security.Permission;
@@ -24,6 +23,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.lang.model.SourceVersion;
 
 /**
  * @author Mike Shaver
@@ -32,6 +32,10 @@ import java.util.Map;
  * @see NativeJavaClass
  */
 class JavaMembers {
+
+    private static final boolean STRICT_REFLECTIVE_ACCESS =
+            SourceVersion.latestSupported().ordinal() > 8;
+
     private static final Permission allPermission = new AllPermission();
 
     JavaMembers(Scriptable scope, Class<?> cl) {
@@ -49,7 +53,7 @@ class JavaMembers {
             this.staticMembers = new HashMap<String, Object>();
             this.cl = cl;
             boolean includePrivate = cx.hasFeature(Context.FEATURE_ENHANCED_JAVA_ACCESS);
-            reflect(scope, includeProtected, includePrivate, shutter);
+            reflect(scope, includeProtected, includePrivate);
         } finally {
             Context.exit();
         }
@@ -83,17 +87,17 @@ class JavaMembers {
         }
         Context cx = Context.getContext();
         Object rval;
-        Type type;
+        Class<?> type;
         try {
             if (member instanceof BeanProperty) {
                 BeanProperty bp = (BeanProperty) member;
                 if (bp.getter == null) return Scriptable.NOT_FOUND;
                 rval = bp.getter.invoke(javaObject, Context.emptyArgs);
-                type = bp.getter.method().getGenericReturnType();
+                type = bp.getter.method().getReturnType();
             } else {
                 Field field = (Field) member;
                 rval = field.get(isStatic ? null : javaObject);
-                type = field.getGenericType();
+                type = field.getType();
             }
         } catch (Exception ex) {
             throw Context.throwAsScriptRuntimeEx(ex);
@@ -291,36 +295,19 @@ class JavaMembers {
      * and interfaces (if they exist). Basically upcasts every method to the nearest accessible
      * method.
      */
-    private static Method[] discoverAccessibleMethods(
-            Class<?> clazz,
-            boolean includeProtected,
-            boolean includePrivate,
-            ClassShutter shutter) {
+    private Method[] discoverAccessibleMethods(
+            Class<?> clazz, boolean includeProtected, boolean includePrivate) {
         Map<MethodSignature, Method> map = new HashMap<MethodSignature, Method>();
-        discoverAccessibleMethods(clazz, map, includeProtected, includePrivate, shutter);
+        discoverAccessibleMethods(clazz, map, includeProtected, includePrivate);
         return map.values().toArray(new Method[map.size()]);
     }
 
-    private static void discoverAccessibleMethods(
+    private void discoverAccessibleMethods(
             Class<?> clazz,
             Map<MethodSignature, Method> map,
             boolean includeProtected,
-            boolean includePrivate,
-            ClassShutter shutter) {
+            boolean includePrivate) {
         if (isPublic(clazz.getModifiers()) || includePrivate) {
-            if (shutter != null) {
-                try {
-                    shutter.checkAccessible(clazz);
-                } catch (SecurityException e) {
-                    discoverInheritedAccessibleMethods(
-                            clazz, map, includeProtected, includePrivate, shutter);
-                    if (shutter.isUsable(clazz, map.values())) {
-                        return;
-                    } else {
-                        throw e;
-                    }
-                }
-            }
             try {
                 if (includeProtected || includePrivate) {
                     while (clazz != null) {
@@ -331,9 +318,7 @@ class JavaMembers {
 
                                 if (isPublic(mods) || isProtected(mods) || includePrivate) {
                                     MethodSignature sig = new MethodSignature(method);
-                                    if (!map.containsKey(sig)
-                                            && (shutter == null
-                                                    || shutter.visibleToScripts(clazz, method))) {
+                                    if (!map.containsKey(sig)) {
                                         if (includePrivate && !method.isAccessible())
                                             method.setAccessible(true);
                                         map.put(sig, method);
@@ -343,7 +328,7 @@ class JavaMembers {
                             Class<?>[] interfaces = clazz.getInterfaces();
                             for (Class<?> intface : interfaces) {
                                 discoverAccessibleMethods(
-                                        intface, map, includeProtected, includePrivate, shutter);
+                                        intface, map, includeProtected, includePrivate);
                             }
                             clazz = clazz.getSuperclass();
                         } catch (SecurityException e) {
@@ -353,25 +338,14 @@ class JavaMembers {
                             Method[] methods = clazz.getMethods();
                             for (Method method : methods) {
                                 MethodSignature sig = new MethodSignature(method);
-                                if (!map.containsKey(sig)
-                                        && (shutter == null
-                                                || shutter.visibleToScripts(clazz, method)))
-                                    map.put(sig, method);
+                                if (!map.containsKey(sig)) map.put(sig, method);
                             }
                             break; // getMethods gets superclass methods, no
                             // need to loop any more
                         }
                     }
                 } else {
-                    Method[] methods = clazz.getMethods();
-                    for (Method method : methods) {
-                        MethodSignature sig = new MethodSignature(method);
-                        // Array may contain methods with same signature but different return value!
-                        if (!map.containsKey(sig)
-                                && (shutter == null || shutter.visibleToScripts(clazz, method))) {
-                            map.put(sig, method);
-                        }
-                    }
+                    discoverPublicMethods(clazz, map);
                 }
                 return;
             } catch (SecurityException e) {
@@ -385,28 +359,30 @@ class JavaMembers {
             }
         }
 
-        discoverInheritedAccessibleMethods(clazz, map, includeProtected, includePrivate, shutter);
-    }
-
-    // if there was a SecurityException or the given class is not visible to scripts
-    // so check all interfaces and superclasses
-    private static void discoverInheritedAccessibleMethods(
-            Class<?> clazz,
-            Map<MethodSignature, Method> map,
-            boolean includeProtected,
-            boolean includePrivate,
-            ClassShutter shutter) {
         Class<?>[] interfaces = clazz.getInterfaces();
         for (Class<?> intface : interfaces) {
-            discoverAccessibleMethods(intface, map, includeProtected, includePrivate, shutter);
+            discoverAccessibleMethods(intface, map, includeProtected, includePrivate);
         }
         Class<?> superclass = clazz.getSuperclass();
         if (superclass != null) {
-            discoverAccessibleMethods(superclass, map, includeProtected, includePrivate, shutter);
+            discoverAccessibleMethods(superclass, map, includeProtected, includePrivate);
         }
     }
 
-    private static final class MethodSignature {
+    void discoverPublicMethods(Class<?> clazz, Map<MethodSignature, Method> map) {
+        Method[] methods = clazz.getMethods();
+        for (Method method : methods) {
+            registerMethod(map, method);
+        }
+    }
+
+    static void registerMethod(Map<MethodSignature, Method> map, Method method) {
+        MethodSignature sig = new MethodSignature(method);
+        // Array may contain methods with same signature but different return value!
+        map.putIfAbsent(sig, method);
+    }
+
+    static final class MethodSignature {
         private final String name;
         private final Class<?>[] args;
 
@@ -434,19 +410,12 @@ class JavaMembers {
         }
     }
 
-    private void reflect(
-            Scriptable scope,
-            boolean includeProtected,
-            boolean includePrivate,
-            ClassShutter shutter) {
+    private void reflect(Scriptable scope, boolean includeProtected, boolean includePrivate) {
         // We reflect methods first, because we want overloaded field/method
         // names to be allocated to the NativeJavaMethod before the field
         // gets in the way.
 
-        Method[] methods =
-                discoverAccessibleMethods(
-                        cl, includeProtected,
-                        includePrivate, shutter);
+        Method[] methods = discoverAccessibleMethods(cl, includeProtected, includePrivate);
         for (Method method : methods) {
             int mods = method.getModifiers();
             boolean isStatic = Modifier.isStatic(mods);
@@ -813,19 +782,27 @@ class JavaMembers {
                 return members;
             }
             try {
-                members = new JavaMembers(cache.getAssociatedScope(), cl, includeProtected);
+                members = createJavaMembers(cache.getAssociatedScope(), cl, includeProtected);
                 break;
             } catch (SecurityException e) {
                 // Reflection may fail for objects that are in a restricted
                 // access package (e.g. sun.*).  If we get a security
                 // exception, try again with the static type if it is interface.
-                // Otherwise, rethrow exception, as superclasses are already
-                // handled by discoverAccessibleMethods
+                // Otherwise, try superclass
                 if (staticType != null && staticType.isInterface()) {
                     cl = staticType;
                     staticType = null; // try staticType only once
                 } else {
-                    throw e;
+                    Class<?> parent = cl.getSuperclass();
+                    if (parent == null) {
+                        if (cl.isInterface()) {
+                            // last resort after failed staticType interface
+                            parent = ScriptRuntime.ObjectClass;
+                        } else {
+                            throw e;
+                        }
+                    }
+                    cl = parent;
                 }
             }
         }
@@ -839,6 +816,15 @@ class JavaMembers {
             }
         }
         return members;
+    }
+
+    private static JavaMembers createJavaMembers(
+            Scriptable associatedScope, Class<?> cl, boolean includeProtected) {
+        if (STRICT_REFLECTIVE_ACCESS) {
+            return new JavaMembers_jdk11(associatedScope, cl, includeProtected);
+        } else {
+            return new JavaMembers(associatedScope, cl, includeProtected);
+        }
     }
 
     private static Object getSecurityContext() {
@@ -898,10 +884,10 @@ class FieldAndMethods extends NativeJavaMethod {
     public Object getDefaultValue(Class<?> hint) {
         if (hint == ScriptRuntime.FunctionClass) return this;
         Object rval;
-        Type type;
+        Class<?> type;
         try {
             rval = field.get(javaObject);
-            type = field.getGenericType();
+            type = field.getType();
         } catch (IllegalAccessException accEx) {
             throw Context.reportRuntimeErrorById("msg.java.internal.private", field.getName());
         }
