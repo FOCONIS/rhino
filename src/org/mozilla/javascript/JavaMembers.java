@@ -15,6 +15,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.Type;
 import java.security.AccessControlContext;
 import java.security.AllPermission;
 import java.security.Permission;
@@ -87,17 +88,17 @@ class JavaMembers {
         }
         Context cx = Context.getContext();
         Object rval;
-        Class<?> type;
+        Type type;
         try {
             if (member instanceof BeanProperty) {
                 BeanProperty bp = (BeanProperty) member;
                 if (bp.getter == null) return Scriptable.NOT_FOUND;
                 rval = bp.getter.invoke(javaObject, Context.emptyArgs);
-                type = bp.getter.method().getReturnType();
+                type = bp.getter.method().getGenericReturnType();
             } else {
                 Field field = (Field) member;
                 rval = field.get(isStatic ? null : javaObject);
-                type = field.getType();
+                type = field.getGenericType();
             }
         } catch (Exception ex) {
             throw Context.throwAsScriptRuntimeEx(ex);
@@ -884,10 +885,10 @@ class FieldAndMethods extends NativeJavaMethod {
     public Object getDefaultValue(Class<?> hint) {
         if (hint == ScriptRuntime.FunctionClass) return this;
         Object rval;
-        Class<?> type;
+        Type type;
         try {
             rval = field.get(javaObject);
-            type = field.getType();
+            type = field.getGenericType();
         } catch (IllegalAccessException accEx) {
             throw Context.reportRuntimeErrorById("msg.java.internal.private", field.getName());
         }

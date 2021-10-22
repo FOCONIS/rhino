@@ -19,6 +19,7 @@ import org.mozilla.javascript.EvaluatorException;
 import org.mozilla.javascript.NativeArray;
 import org.mozilla.javascript.NativeJavaMethod;
 import org.mozilla.javascript.Scriptable;
+import org.mozilla.javascript.Undefined;
 import org.mozilla.javascript.tools.shell.Global;
 
 /** From @makusuko (Markus Sunela), imported from PR https://github.com/mozilla/rhino/pull/561 */
@@ -69,15 +70,23 @@ public class NativeJavaMapTest extends TestCase {
 
     public void testAccessingJavaMapLongValues() {
         Map<Number, Number> map = new HashMap<>();
+
         map.put(0L, 1);
         map.put(1L, 2);
         map.put(2L, 3);
 
         assertEquals(2, runScriptAsInt("value[1]", map, true));
         assertEquals(3, runScriptAsInt("value[2]", map, true));
+        assertEquals(Undefined.instance, runScript("value.foo", map, true));
         runScriptAsString("value[4] = 4.01", map, true);
-        assertEquals(Double.valueOf(4.01), map.get(4));
+        runScriptAsString("value[2] = 2.01", map, true);
+        assertEquals(4.01, map.get(4));
         assertEquals(null, map.get(4L));
+        assertEquals(null, map.get(4.0D));
+        // overwrite existing key.
+        assertEquals(null, map.get(2));
+        assertEquals(2.01, map.get(2L));
+        assertEquals(null, map.get(2.0D));
     }
 
     public void testAccessingJavaMapEnumValuesWithGeneric() {
@@ -101,9 +110,9 @@ public class NativeJavaMapTest extends TestCase {
             runScriptAsString("value['D'] = 4.0", map, true);
             fail();
             ;
-        } catch (IllegalArgumentException ex) {
+        } catch (EvaluatorException ex) {
             assertEquals(
-                    "No enum constant org.mozilla.javascript.tests.NativeJavaMapTest.MyEnum.D",
+                    "Cannot convert D to org.mozilla.javascript.tests.NativeJavaMapTest$MyEnum (#1)",
                     ex.getMessage());
         }
     }
@@ -194,7 +203,8 @@ public class NativeJavaMapTest extends TestCase {
 
     public void testKeys() {
         Map<String, String> map = new HashMap<>();
-        NativeArray resEmpty = (NativeArray) runScript("Object.keys(value)", map, true);
+        NativeArray resEmpty =
+                (NativeArray) runScript("Object.keys(value)", map, Function.identity(), true);
         assertEquals(0, resEmpty.size());
 
         map.put("a", "a");
@@ -209,30 +219,9 @@ public class NativeJavaMapTest extends TestCase {
 
         Map<Integer, String> mapInt = new HashMap<>();
         mapInt.put(42, "test");
-        NativeArray resInt = (NativeArray) runScript("Object.keys(value)", mapInt, true);
+        NativeArray resInt =
+                (NativeArray) runScript("Object.keys(value)", mapInt, Function.identity(), true);
         assertTrue(resInt.contains("42")); // Object.keys always return Strings as key
-    }
-
-    public void testMethodOverwrite() {
-        Map<String, String> map = new HashMap<>();
-
-        map.put("size", "42");
-        map.put("clear", "foo");
-
-        NativeArray res =
-                (NativeArray) runScript("Object.keys(value)", map, Function.identity(), true);
-        assertEquals(2, res.size());
-        assertTrue(res.contains("size"));
-        assertTrue(res.contains("clear"));
-        // Call to overriden method not possible with enableJavaMapAccess
-        //      String resStr = runScriptAsString("var size = value.size();\n"
-        //          + "var getSize = value.get('size');\n"
-        //          + "value.clear();\n" //it is impossible to call orignial size() and clear() here
-        //          // CHEKCME: can we do that with JavaMap.prototype.clear.apply(value)
-        //          + "[size, getSize]", map, true);
-        //
-        //      assertTrue(map.isEmpty()); // Object.keys always return Strings as key
-        //      assertEquals("2,42", resStr);
     }
 
     public void testJavaMapWithoutAccessEntries() {

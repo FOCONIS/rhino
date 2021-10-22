@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package org.mozilla.javascript;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -45,15 +46,21 @@ import java.util.List;
  */
 public class NativeJavaList extends NativeJavaObject {
 
-    private static final long serialVersionUID = 660285467829047519L;
+    private static final long serialVersionUID = 6403865639690547921L;
 
-    private List<Object> list;
+    protected final List<Object> list;
+
+    protected final Class<?> valueType;
 
     @SuppressWarnings("unchecked")
-    public NativeJavaList(Scriptable scope, Object list) {
-        super(scope, list, list.getClass());
+    public NativeJavaList(Scriptable scope, Object list, Type staticType) {
+        super(scope, list, staticType);
         assert list instanceof List;
         this.list = (List<Object>) list;
+
+        Type[] types = JavaTypes.lookupType(scope, list.getClass(), staticType, List.class);
+
+        this.valueType = types == null ? Object.class : JavaTypes.getRawType(types[0]);
     }
 
     @Override
@@ -123,7 +130,7 @@ public class NativeJavaList extends NativeJavaObject {
     @Override
     public void put(int index, Scriptable start, Object value) {
         if (index >= 0) {
-            Object javaValue = Context.jsToJava(value, Object.class);
+            Object javaValue = Context.jsToJava(value, valueType);
             if (index == list.size()) {
                 list.add(javaValue); // use "add" at the end of list.
             } else {
