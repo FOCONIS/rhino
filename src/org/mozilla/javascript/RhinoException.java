@@ -10,11 +10,8 @@ import java.io.CharArrayWriter;
 import java.io.FilenameFilter;
 import java.io.PrintStream;
 import java.io.PrintWriter;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.PropertyPermission;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -389,16 +386,7 @@ public abstract class RhinoException extends RuntimeException {
 
     // Allow us to override default stack style for debugging.
     static {
-        String style =
-                AccessController.doPrivileged(
-                        new PrivilegedAction<String>() {
-                            @Override
-                            public String run() {
-                                return System.getProperty("rhino.stack.style");
-                            }
-                        },
-                        null,
-                        new PropertyPermission("rhino.stack.style", "read"));
+        String style = System.getProperty("rhino.stack.style");
         if (style != null) {
             if ("Rhino".equalsIgnoreCase(style)) {
                 stackStyle = StackStyle.RHINO;
