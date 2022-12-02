@@ -16,51 +16,52 @@ import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
+import java.security.AccessControlContext;
+import java.security.AllPermission;
+import java.security.Permission;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.lang.model.SourceVersion;
 
 /**
- *
  * @author Mike Shaver
  * @author Norris Boyd
  * @see NativeJavaObject
  * @see NativeJavaClass
  */
-class JavaMembers
-{
-    JavaMembers(Scriptable scope, Class<?> cl)
-    {
+class JavaMembers {
+
+    private static final boolean STRICT_REFLECTIVE_ACCESS =
+            SourceVersion.latestSupported().ordinal() > 8;
+
+    private static final Permission allPermission = new AllPermission();
+
+    JavaMembers(Scriptable scope, Class<?> cl) {
         this(scope, cl, false);
     }
 
-    JavaMembers(Scriptable scope, Class<?> cl, boolean includeProtected)
-    {
+    JavaMembers(Scriptable scope, Class<?> cl, boolean includeProtected) {
         try {
             Context cx = ContextFactory.getGlobal().enterContext();
             ClassShutter shutter = cx.getClassShutter();
             if (shutter != null && !shutter.visibleToScripts(cl.getName())) {
-                throw Context.reportRuntimeErrorById("msg.access.prohibited",
-                                                  cl.getName());
+                throw Context.reportRuntimeErrorById("msg.access.prohibited", cl.getName());
             }
-            this.members = new HashMap<String,Object>();
-            this.staticMembers = new HashMap<String,Object>();
+            this.members = new HashMap<String, Object>();
+            this.staticMembers = new HashMap<String, Object>();
             this.cl = cl;
-            boolean includePrivate = cx.hasFeature(
-                    Context.FEATURE_ENHANCED_JAVA_ACCESS);
+            boolean includePrivate = cx.hasFeature(Context.FEATURE_ENHANCED_JAVA_ACCESS);
             reflect(scope, includeProtected, includePrivate);
         } finally {
             Context.exit();
         }
     }
 
-    boolean has(String name, boolean isStatic)
-    {
-        Map<String,Object> ht = isStatic ? staticMembers : members;
+    boolean has(String name, boolean isStatic) {
+        Map<String, Object> ht = isStatic ? staticMembers : members;
         Object obj = ht.get(name);
         if (obj != null) {
             return true;
@@ -68,20 +69,19 @@ class JavaMembers
         return findExplicitFunction(name, isStatic) != null;
     }
 
-    Object get(Scriptable scope, String name, Object javaObject,
-               boolean isStatic)
-    {
-        Map<String,Object> ht = isStatic ? staticMembers : members;
+    Object get(Scriptable scope, String name, Object javaObject, boolean isStatic) {
+        Map<String, Object> ht = isStatic ? staticMembers : members;
         Object member = ht.get(name);
         if (!isStatic && member == null) {
             // Try to get static member from instance (LC3)
             member = staticMembers.get(name);
         }
         if (member == null) {
-            member = this.getExplicitFunction(scope, name,
-                                              javaObject, isStatic);
-            if (member == null)
-                return Scriptable.NOT_FOUND;
+            member =
+                    this.getExplicitFunction(
+                            scope, name,
+                            javaObject, isStatic);
+            if (member == null) return Scriptable.NOT_FOUND;
         }
         if (member instanceof Scriptable) {
             return member;
@@ -92,8 +92,7 @@ class JavaMembers
         try {
             if (member instanceof BeanProperty) {
                 BeanProperty bp = (BeanProperty) member;
-                if (bp.getter == null)
-                    return Scriptable.NOT_FOUND;
+                if (bp.getter == null) return Scriptable.NOT_FOUND;
                 rval = bp.getter.invoke(javaObject, Context.emptyArgs);
                 type = bp.getter.method().getGenericReturnType();
             } else {
@@ -109,17 +108,24 @@ class JavaMembers
         return cx.getWrapFactory().wrap(cx, scope, rval, type);
     }
 
-    void put(Scriptable scope, String name, Object javaObject,
-             Object value, boolean isStatic)
-    {
-        Map<String,Object> ht = isStatic ? staticMembers : members;
+    void put(Scriptable scope, String name, Object javaObject, Object value, boolean isStatic) {
+        put(scope, name, javaObject, value, isStatic, null);
+    }
+
+    void put(
+            Scriptable scope,
+            String name,
+            Object javaObject,
+            Object value,
+            boolean isStatic,
+            JavaTypeResolver typeResolver) {
+        Map<String, Object> ht = isStatic ? staticMembers : members;
         Object member = ht.get(name);
         if (!isStatic && member == null) {
             // Try to get static member from instance (LC3)
             member = staticMembers.get(name);
         }
-        if (member == null)
-            throw reportMemberNotFound(name);
+        if (member == null) throw reportMemberNotFound(name);
         if (member instanceof FieldAndMethods) {
             FieldAndMethods fam = (FieldAndMethods) ht.get(name);
             member = fam.field;
@@ -127,7 +133,7 @@ class JavaMembers
 
         // Is this a bean property "set"?
         if (member instanceof BeanProperty) {
-            BeanProperty bp = (BeanProperty)member;
+            BeanProperty bp = (BeanProperty) member;
             if (bp.setter == null) {
                 throw reportMemberNotFound(name);
             }
@@ -136,27 +142,37 @@ class JavaMembers
             // setter to use:
             if (bp.setters == null || value == null) {
                 Class<?> setType = bp.setter.argTypes[0];
-                Object[] args = { Context.jsToJava(value, setType) };
+                if (typeResolver != null && bp.setter.genericArgTypes != null) {
+                    setType = typeResolver.resolve(bp.setter.genericArgTypes[0]);
+                }
+                Object[] args = {Context.jsToJava(value, setType)};
                 try {
                     bp.setter.invoke(javaObject, args);
                 } catch (Exception ex) {
-                  throw Context.throwAsScriptRuntimeEx(ex);
+                    throw Context.throwAsScriptRuntimeEx(ex);
                 }
             } else {
-                Object[] args = { value };
-                bp.setters.call(Context.getContext(),
-                                ScriptableObject.getTopLevelScope(scope),
-                                scope, args);
+                Object[] args = {value};
+                bp.setters.call(
+                        Context.getContext(),
+                        ScriptableObject.getTopLevelScope(scope),
+                        scope,
+                        args);
             }
-        }
-        else {
+        } else {
             if (!(member instanceof Field)) {
-                String str = (member == null) ? "msg.java.internal.private"
-                                              : "msg.java.method.assign";
+                String str =
+                        (member == null) ? "msg.java.internal.private" : "msg.java.method.assign";
                 throw Context.reportRuntimeErrorById(str, name);
             }
-            Field field = (Field)member;
-            Object javaValue = Context.jsToJava(value, field.getType());
+            Field field = (Field) member;
+            Class<?> fieldType;
+            if (typeResolver != null) {
+                fieldType = typeResolver.resolve(field.getGenericType());
+            } else {
+                fieldType = field.getType();
+            }
+            Object javaValue = Context.jsToJava(value, fieldType);
             try {
                 field.set(javaObject, javaValue);
             } catch (IllegalAccessException accessEx) {
@@ -167,21 +183,20 @@ class JavaMembers
                 throw Context.throwAsScriptRuntimeEx(accessEx);
             } catch (IllegalArgumentException argEx) {
                 throw Context.reportRuntimeErrorById(
-                    "msg.java.internal.field.type",
-                    value.getClass().getName(), field,
-                    javaObject.getClass().getName());
+                        "msg.java.internal.field.type",
+                        value.getClass().getName(),
+                        field,
+                        javaObject.getClass().getName());
             }
         }
     }
 
-    Object[] getIds(boolean isStatic)
-    {
-        Map<String,Object> map = isStatic ? staticMembers : members;
+    Object[] getIds(boolean isStatic) {
+        Map<String, Object> map = isStatic ? staticMembers : members;
         return map.keySet().toArray(new Object[map.size()]);
     }
 
-    static String javaSignature(Class<?> type)
-    {
+    static String javaSignature(Class<?> type) {
         if (!type.isArray()) {
             return type.getName();
         }
@@ -205,10 +220,11 @@ class JavaMembers
         return sb.toString();
     }
 
-    static String liveConnectSignature(Class<?>[] argTypes)
-    {
+    static String liveConnectSignature(Class<?>[] argTypes) {
         int N = argTypes.length;
-        if (N == 0) { return "()"; }
+        if (N == 0) {
+            return "()";
+        }
         StringBuilder sb = new StringBuilder();
         sb.append('(');
         for (int i = 0; i != N; ++i) {
@@ -221,12 +237,13 @@ class JavaMembers
         return sb.toString();
     }
 
-    private MemberBox findExplicitFunction(String name, boolean isStatic)
-    {
+    private MemberBox findExplicitFunction(String name, boolean isStatic) {
         int sigStart = name.indexOf('(');
-        if (sigStart < 0) { return null; }
+        if (sigStart < 0) {
+            return null;
+        }
 
-        Map<String,Object> ht = isStatic ? staticMembers : members;
+        Map<String, Object> ht = isStatic ? staticMembers : members;
         MemberBox[] methodsOrCtors = null;
         boolean isCtor = (isStatic && sigStart == 0);
 
@@ -235,14 +252,14 @@ class JavaMembers
             methodsOrCtors = ctors.methods;
         } else {
             // Explicit request for an overloaded method
-            String trueName = name.substring(0,sigStart);
+            String trueName = name.substring(0, sigStart);
             Object obj = ht.get(trueName);
             if (!isStatic && obj == null) {
                 // Try to get static member from instance (LC3)
                 obj = staticMembers.get(trueName);
             }
             if (obj instanceof NativeJavaMethod) {
-                NativeJavaMethod njm = (NativeJavaMethod)obj;
+                NativeJavaMethod njm = (NativeJavaMethod) obj;
                 methodsOrCtors = njm.methods;
             }
         }
@@ -252,8 +269,7 @@ class JavaMembers
                 Class<?>[] type = methodsOrCtor.argTypes;
                 String sig = liveConnectSignature(type);
                 if (sigStart + sig.length() == name.length()
-                        && name.regionMatches(sigStart, sig, 0, sig.length()))
-                {
+                        && name.regionMatches(sigStart, sig, 0, sig.length())) {
                     return methodsOrCtor;
                 }
             }
@@ -262,20 +278,17 @@ class JavaMembers
         return null;
     }
 
-    private Object getExplicitFunction(Scriptable scope, String name,
-                                       Object javaObject, boolean isStatic)
-    {
-        Map<String,Object> ht = isStatic ? staticMembers : members;
+    private Object getExplicitFunction(
+            Scriptable scope, String name, Object javaObject, boolean isStatic) {
+        Map<String, Object> ht = isStatic ? staticMembers : members;
         Object member = null;
         MemberBox methodOrCtor = findExplicitFunction(name, isStatic);
 
         if (methodOrCtor != null) {
-            Scriptable prototype =
-                ScriptableObject.getFunctionPrototype(scope);
+            Scriptable prototype = ScriptableObject.getFunctionPrototype(scope);
 
             if (methodOrCtor.isCtor()) {
-                NativeJavaConstructor fun =
-                    new NativeJavaConstructor(methodOrCtor);
+                NativeJavaConstructor fun = new NativeJavaConstructor(methodOrCtor);
                 fun.setPrototype(prototype);
                 member = fun;
                 ht.put(name, fun);
@@ -283,10 +296,9 @@ class JavaMembers
                 String trueName = methodOrCtor.getName();
                 member = ht.get(trueName);
 
-                if (member instanceof NativeJavaMethod &&
-                    ((NativeJavaMethod)member).methods.length > 1 ) {
-                    NativeJavaMethod fun =
-                        new NativeJavaMethod(methodOrCtor, name);
+                if (member instanceof NativeJavaMethod
+                        && ((NativeJavaMethod) member).methods.length > 1) {
+                    NativeJavaMethod fun = new NativeJavaMethod(methodOrCtor, name);
                     fun.setPrototype(prototype);
                     ht.put(name, fun);
                     member = fun;
@@ -298,25 +310,23 @@ class JavaMembers
     }
 
     /**
-     * Retrieves mapping of methods to accessible methods for a class.
-     * In case the class is not public, retrieves methods with same
-     * signature as its public methods from public superclasses and
-     * interfaces (if they exist). Basically upcasts every method to the
-     * nearest accessible method.
+     * Retrieves mapping of methods to accessible methods for a class. In case the class is not
+     * public, retrieves methods with same signature as its public methods from public superclasses
+     * and interfaces (if they exist). Basically upcasts every method to the nearest accessible
+     * method.
      */
-    private static Method[] discoverAccessibleMethods(Class<?> clazz,
-                                                      boolean includeProtected,
-                                                      boolean includePrivate)
-    {
-        Map<MethodSignature,Method> map = new HashMap<MethodSignature,Method>();
+    private Method[] discoverAccessibleMethods(
+            Class<?> clazz, boolean includeProtected, boolean includePrivate) {
+        Map<MethodSignature, Method> map = new HashMap<MethodSignature, Method>();
         discoverAccessibleMethods(clazz, map, includeProtected, includePrivate);
         return map.values().toArray(new Method[map.size()]);
     }
 
-    private static void discoverAccessibleMethods(Class<?> clazz,
-            Map<MethodSignature,Method> map, boolean includeProtected,
-            boolean includePrivate)
-    {
+    private void discoverAccessibleMethods(
+            Class<?> clazz,
+            Map<MethodSignature, Method> map,
+            boolean includeProtected,
+            boolean includePrivate) {
         if (isPublic(clazz.getModifiers()) || includePrivate) {
             try {
                 if (includeProtected || includePrivate) {
@@ -326,9 +336,7 @@ class JavaMembers
                             for (Method method : methods) {
                                 int mods = method.getModifiers();
 
-                                if (isPublic(mods)
-                                        || isProtected(mods)
-                                        || includePrivate) {
+                                if (isPublic(mods) || isProtected(mods) || includePrivate) {
                                     MethodSignature sig = new MethodSignature(method);
                                     if (!map.containsKey(sig)) {
                                         if (includePrivate && !method.isAccessible())
@@ -339,8 +347,8 @@ class JavaMembers
                             }
                             Class<?>[] interfaces = clazz.getInterfaces();
                             for (Class<?> intface : interfaces) {
-                                discoverAccessibleMethods(intface, map, includeProtected,
-                                                          includePrivate);
+                                discoverAccessibleMethods(
+                                        intface, map, includeProtected, includePrivate);
                             }
                             clazz = clazz.getSuperclass();
                         } catch (SecurityException e) {
@@ -350,28 +358,22 @@ class JavaMembers
                             Method[] methods = clazz.getMethods();
                             for (Method method : methods) {
                                 MethodSignature sig = new MethodSignature(method);
-                                if (!map.containsKey(sig))
-                                    map.put(sig, method);
+                                if (!map.containsKey(sig)) map.put(sig, method);
                             }
                             break; // getMethods gets superclass methods, no
-                                   // need to loop any more
+                            // need to loop any more
                         }
                     }
                 } else {
-                    Method[] methods = clazz.getMethods();
-                    for (Method method : methods) {
-                        MethodSignature sig = new MethodSignature(method);
-                        // Array may contain methods with same signature but different return value!
-                        if (!map.containsKey(sig))
-                            map.put(sig, method);
-                    }
+                    discoverPublicMethods(clazz, map);
                 }
                 return;
             } catch (SecurityException e) {
                 Context.reportWarning(
-                        "Could not discover accessible methods of class " +
-                            clazz.getName() + " due to lack of privileges, " +
-                            "attemping superclasses/interfaces.");
+                        "Could not discover accessible methods of class "
+                                + clazz.getName()
+                                + " due to lack of privileges, "
+                                + "attemping superclasses/interfaces.");
                 // Fall through and attempt to discover superclass/interface
                 // methods
             }
@@ -379,64 +381,65 @@ class JavaMembers
 
         Class<?>[] interfaces = clazz.getInterfaces();
         for (Class<?> intface : interfaces) {
-            discoverAccessibleMethods(intface, map, includeProtected,
-                    includePrivate);
+            discoverAccessibleMethods(intface, map, includeProtected, includePrivate);
         }
         Class<?> superclass = clazz.getSuperclass();
         if (superclass != null) {
-            discoverAccessibleMethods(superclass, map, includeProtected,
-                    includePrivate);
+            discoverAccessibleMethods(superclass, map, includeProtected, includePrivate);
         }
     }
 
-    private static final class MethodSignature
-    {
+    void discoverPublicMethods(Class<?> clazz, Map<MethodSignature, Method> map) {
+        Method[] methods = clazz.getMethods();
+        for (Method method : methods) {
+            registerMethod(map, method);
+        }
+    }
+
+    static void registerMethod(Map<MethodSignature, Method> map, Method method) {
+        MethodSignature sig = new MethodSignature(method);
+        // Array may contain methods with same signature but different return value!
+        map.putIfAbsent(sig, method);
+    }
+
+    static final class MethodSignature {
         private final String name;
         private final Class<?>[] args;
 
-        private MethodSignature(String name, Class<?>[] args)
-        {
+        private MethodSignature(String name, Class<?>[] args) {
             this.name = name;
             this.args = args;
         }
 
-        MethodSignature(Method method)
-        {
+        MethodSignature(Method method) {
             this(method.getName(), method.getParameterTypes());
         }
 
         @Override
-        public boolean equals(Object o)
-        {
-            if(o instanceof MethodSignature)
-            {
-                MethodSignature ms = (MethodSignature)o;
+        public boolean equals(Object o) {
+            if (o instanceof MethodSignature) {
+                MethodSignature ms = (MethodSignature) o;
                 return ms.name.equals(name) && Arrays.equals(args, ms.args);
             }
             return false;
         }
 
         @Override
-        public int hashCode()
-        {
+        public int hashCode() {
             return name.hashCode() ^ args.length;
         }
     }
 
-    private void reflect(Scriptable scope,
-                         boolean includeProtected,
-                         boolean includePrivate)
-    {
+    private void reflect(Scriptable scope, boolean includeProtected, boolean includePrivate) {
         // We reflect methods first, because we want overloaded field/method
         // names to be allocated to the NativeJavaMethod before the field
         // gets in the way.
 
-        Method[] methods = discoverAccessibleMethods(cl, includeProtected,
-                                                     includePrivate);
+        Method[] methods = discoverAccessibleMethods(cl, includeProtected, includePrivate);
         for (Method method : methods) {
             int mods = method.getModifiers();
             boolean isStatic = Modifier.isStatic(mods);
-            Map<String,Object> ht = isStatic ? staticMembers : members;
+            Map<String, Object> ht = isStatic ? staticMembers : members;
             String name = method.getName();
             Object value = ht.get(name);
             if (value == null) {
@@ -444,7 +447,7 @@ class JavaMembers
             } else {
                 ObjArray overloadedMethods;
                 if (value instanceof ObjArray) {
-                    overloadedMethods = (ObjArray)value;
+                    overloadedMethods = (ObjArray) value;
                 } else {
                     if (!(value instanceof Method)) Kit.codeBug();
                     // value should be instance of Method as at this stage
@@ -461,20 +464,20 @@ class JavaMembers
         // first in staticMembers and then in members
         for (int tableCursor = 0; tableCursor != 2; ++tableCursor) {
             boolean isStatic = (tableCursor == 0);
-            Map<String,Object> ht = isStatic ? staticMembers : members;
-            for (Map.Entry<String, Object> entry: ht.entrySet()) {
+            Map<String, Object> ht = isStatic ? staticMembers : members;
+            for (Map.Entry<String, Object> entry : ht.entrySet()) {
                 MemberBox[] methodBoxes;
                 Object value = entry.getValue();
                 if (value instanceof Method) {
                     methodBoxes = new MemberBox[1];
-                    methodBoxes[0] = new MemberBox((Method)value);
+                    methodBoxes[0] = new MemberBox((Method) value);
                 } else {
-                    ObjArray overloadedMethods = (ObjArray)value;
+                    ObjArray overloadedMethods = (ObjArray) value;
                     int N = overloadedMethods.size();
                     if (N < 2) Kit.codeBug();
                     methodBoxes = new MemberBox[N];
                     for (int i = 0; i != N; ++i) {
-                        Method method = (Method)overloadedMethods.get(i);
+                        Method method = (Method) overloadedMethods.get(i);
                         methodBoxes[i] = new MemberBox(method);
                     }
                 }
@@ -493,18 +496,17 @@ class JavaMembers
             int mods = field.getModifiers();
             try {
                 boolean isStatic = Modifier.isStatic(mods);
-                Map<String,Object> ht = isStatic ? staticMembers : members;
+                Map<String, Object> ht = isStatic ? staticMembers : members;
                 Object member = ht.get(name);
                 if (member == null) {
                     ht.put(name, field);
                 } else if (member instanceof NativeJavaMethod) {
                     NativeJavaMethod method = (NativeJavaMethod) member;
-                    FieldAndMethods fam
-                        = new FieldAndMethods(scope, method.methods, field);
-                    Map<String,FieldAndMethods> fmht = isStatic ? staticFieldAndMethods
-                                              : fieldAndMethods;
+                    FieldAndMethods fam = new FieldAndMethods(scope, method.methods, field);
+                    Map<String, FieldAndMethods> fmht =
+                            isStatic ? staticFieldAndMethods : fieldAndMethods;
                     if (fmht == null) {
-                        fmht = new HashMap<String,FieldAndMethods>();
+                        fmht = new HashMap<String, FieldAndMethods>();
                         if (isStatic) {
                             staticFieldAndMethods = fmht;
                         } else {
@@ -521,9 +523,7 @@ class JavaMembers
                     // reflected.
                     // For now, the first field found wins, unless another field
                     // explicitly shadows it.
-                    if (oldField.getDeclaringClass().
-                            isAssignableFrom(field.getDeclaringClass()))
-                    {
+                    if (oldField.getDeclaringClass().isAssignableFrom(field.getDeclaringClass())) {
                         ht.put(name, field);
                     }
                 } else {
@@ -532,9 +532,12 @@ class JavaMembers
                 }
             } catch (SecurityException e) {
                 // skip this field
-                Context.reportWarning("Could not access field "
-                        + name + " of class " + cl.getName() +
-                        " due to lack of privileges.");
+                Context.reportWarning(
+                        "Could not access field "
+                                + name
+                                + " of class "
+                                + cl.getName()
+                                + " due to lack of privileges.");
             }
         }
 
@@ -542,23 +545,20 @@ class JavaMembers
         // static members and then for instance members
         for (int tableCursor = 0; tableCursor != 2; ++tableCursor) {
             boolean isStatic = (tableCursor == 0);
-            Map<String,Object> ht = isStatic ? staticMembers : members;
+            Map<String, Object> ht = isStatic ? staticMembers : members;
 
-            Map<String,BeanProperty> toAdd = new HashMap<String,BeanProperty>();
+            Map<String, BeanProperty> toAdd = new HashMap<String, BeanProperty>();
 
             // Now, For each member, make "bean" properties.
-            for (String name: ht.keySet()) {
+            for (String name : ht.keySet()) {
                 // Is this a getter?
                 boolean memberIsGetMethod = name.startsWith("get");
                 boolean memberIsSetMethod = name.startsWith("set");
                 boolean memberIsIsMethod = name.startsWith("is");
-                if (memberIsGetMethod || memberIsIsMethod
-                        || memberIsSetMethod) {
+                if (memberIsGetMethod || memberIsIsMethod || memberIsSetMethod) {
                     // Double check name component.
-                    String nameComponent
-                        = name.substring(memberIsIsMethod ? 2 : 3);
-                    if (nameComponent.length() == 0)
-                        continue;
+                    String nameComponent = name.substring(memberIsIsMethod ? 2 : 3);
+                    if (nameComponent.length() == 0) continue;
 
                     // Make the bean property name.
                     String beanPropertyName = nameComponent;
@@ -569,23 +569,22 @@ class JavaMembers
                         } else {
                             char ch1 = nameComponent.charAt(1);
                             if (!Character.isUpperCase(ch1)) {
-                                beanPropertyName = Character.toLowerCase(ch0)
-                                                   +nameComponent.substring(1);
+                                beanPropertyName =
+                                        Character.toLowerCase(ch0) + nameComponent.substring(1);
                             }
                         }
                     }
 
                     // If we already have a member by this name, don't do this
                     // property.
-                    if (toAdd.containsKey(beanPropertyName))
-                        continue;
+                    if (toAdd.containsKey(beanPropertyName)) continue;
                     Object v = ht.get(beanPropertyName);
                     if (v != null) {
                         // A private field shouldn't mask a public getter/setter
-                        if (!includePrivate || !(v instanceof Member) ||
-                            !Modifier.isPrivate(((Member)v).getModifiers()))
+                        if (!includePrivate
+                                || !(v instanceof Member)
+                                || !Modifier.isPrivate(((Member) v).getModifiers())) {
 
-                        {
                             continue;
                         }
                     }
@@ -608,17 +607,15 @@ class JavaMembers
                         // Is this value a method?
                         Object member = ht.get(setterName);
                         if (member instanceof NativeJavaMethod) {
-                            NativeJavaMethod njmSet = (NativeJavaMethod)member;
+                            NativeJavaMethod njmSet = (NativeJavaMethod) member;
                             if (getter != null) {
                                 // We have a getter. Now, do we have a matching
                                 // setter?
                                 Class<?> type = getter.method().getReturnType();
-                                setter = extractSetMethod(type, njmSet.methods,
-                                                            isStatic);
+                                setter = extractSetMethod(type, njmSet.methods, isStatic);
                             } else {
                                 // No getter, find any set method
-                                setter = extractSetMethod(njmSet.methods,
-                                                            isStatic);
+                                setter = extractSetMethod(njmSet.methods, isStatic);
                             }
                             if (njmSet.methods.length > 1) {
                                 setters = njmSet;
@@ -626,8 +623,7 @@ class JavaMembers
                         }
                     }
                     // Make the property.
-                    BeanProperty bp = new BeanProperty(getter, setter,
-                                                       setters);
+                    BeanProperty bp = new BeanProperty(getter, setter, setters);
                     toAdd.put(beanPropertyName, bp);
                 }
             }
@@ -636,32 +632,6 @@ class JavaMembers
             ht.putAll(toAdd);
         }
 
-        // if we are a Map or Iterable, we add an iterator in order
-        // that the JavaObject can be used in 'for(key in o)' or
-        // 'for each (value in o)' loops
-        if (Map.class.isAssignableFrom(cl)) {
-            // Add Map iterator
-            members.put(NativeIterator.ITERATOR_PROPERTY_NAME,
-                    NativeIterator.JAVA_MAP_ITERATOR);
-            
-        } else if (Iterable.class.isAssignableFrom(cl)) {
-            // Add Iterable/Collection iterator
-            members.put(NativeIterator.ITERATOR_PROPERTY_NAME,
-                    NativeIterator.JAVA_COLLECTION_ITERATOR);
-            // look for size() method and register as length property
-            Object member = members.get("size");
-            if (member instanceof NativeJavaMethod) {
-                NativeJavaMethod njmGet = (NativeJavaMethod) member;
-                MemberBox sizeMethod = extractGetMethod(njmGet.methods, false);
-                if (sizeMethod != null) {
-                    BeanProperty bp = new BeanProperty(sizeMethod, null, null);
-                    members.put("length", bp);
-                }
-            }
-        }
-
-        // add toJson-function, if there is not one.
-        members.putIfAbsent("toJSON", ToJsonFunction.INSTANCE);
         // Reflect constructors
         Constructor<?>[] constructors = getAccessibleConstructors(includePrivate);
         MemberBox[] ctorMembers = new MemberBox[constructors.length];
@@ -671,28 +641,28 @@ class JavaMembers
         ctors = new NativeJavaMethod(ctorMembers, cl.getSimpleName());
     }
 
-    private Constructor<?>[] getAccessibleConstructors(boolean includePrivate)
-    {
-      // The JVM currently doesn't allow changing access on java.lang.Class
-      // constructors, so don't try
-      if (includePrivate && cl != ScriptRuntime.ClassClass) {
-          try {
-              Constructor<?>[] cons = cl.getDeclaredConstructors();
-              AccessibleObject.setAccessible(cons, true);
+    private Constructor<?>[] getAccessibleConstructors(boolean includePrivate) {
+        // The JVM currently doesn't allow changing access on java.lang.Class
+        // constructors, so don't try
+        if (includePrivate && cl != ScriptRuntime.ClassClass) {
+            try {
+                Constructor<?>[] cons = cl.getDeclaredConstructors();
+                AccessibleObject.setAccessible(cons, true);
 
-              return cons;
-          } catch (SecurityException e) {
-              // Fall through to !includePrivate case
-              Context.reportWarning("Could not access constructor " +
-                    " of class " + cl.getName() +
-                    " due to lack of privileges.");
-          }
-      }
-      return cl.getConstructors();
+                return cons;
+            } catch (SecurityException e) {
+                // Fall through to !includePrivate case
+                Context.reportWarning(
+                        "Could not access constructor "
+                                + " of class "
+                                + cl.getName()
+                                + " due to lack of privileges.");
+            }
+        }
+        return cl.getConstructors();
     }
 
-    private Field[] getAccessibleFields(boolean includeProtected,
-                                        boolean includePrivate) {
+    private Field[] getAccessibleFields(boolean includeProtected, boolean includePrivate) {
         if (includePrivate || includeProtected) {
             try {
                 List<Field> fieldsList = new ArrayList<Field>();
@@ -705,8 +675,7 @@ class JavaMembers
                     for (Field field : declared) {
                         int mod = field.getModifiers();
                         if (includePrivate || isPublic(mod) || isProtected(mod)) {
-                            if (!field.isAccessible())
-                                field.setAccessible(true);
+                            if (!field.isAccessible()) field.setAccessible(true);
                             fieldsList.add(field);
                         }
                     }
@@ -723,9 +692,8 @@ class JavaMembers
         return cl.getFields();
     }
 
-    private static MemberBox findGetter(boolean isStatic, Map<String,Object> ht, String prefix,
-                                 String propertyName)
-    {
+    private static MemberBox findGetter(
+            boolean isStatic, Map<String, Object> ht, String prefix, String propertyName) {
         String getterName = prefix.concat(propertyName);
         if (ht.containsKey(getterName)) {
             // Check that the getter is a method.
@@ -738,9 +706,7 @@ class JavaMembers
         return null;
     }
 
-    private static MemberBox extractGetMethod(MemberBox[] methods,
-                                              boolean isStatic)
-    {
+    private static MemberBox extractGetMethod(MemberBox[] methods, boolean isStatic) {
         // Inspect the list of all MemberBox for the only one having no
         // parameters
         for (MemberBox method : methods) {
@@ -757,9 +723,8 @@ class JavaMembers
         return null;
     }
 
-    private static MemberBox extractSetMethod(Class<?> type, MemberBox[] methods,
-                                              boolean isStatic)
-    {
+    private static MemberBox extractSetMethod(
+            Class<?> type, MemberBox[] methods, boolean isStatic) {
         //
         // Note: it may be preferable to allow NativeJavaMethod.findFunction()
         //       to find the appropriate setter; unfortunately, it requires an
@@ -790,9 +755,7 @@ class JavaMembers
         return null;
     }
 
-    private static MemberBox extractSetMethod(MemberBox[] methods,
-                                              boolean isStatic)
-    {
+    private static MemberBox extractSetMethod(MemberBox[] methods, boolean isStatic) {
 
         for (MemberBox method : methods) {
             if (!isStatic || method.isStatic()) {
@@ -806,44 +769,40 @@ class JavaMembers
         return null;
     }
 
-    Map<String,FieldAndMethods> getFieldAndMethodsObjects(Scriptable scope,
-            Object javaObject, boolean isStatic)
-    {
-        Map<String,FieldAndMethods> ht = isStatic ? staticFieldAndMethods : fieldAndMethods;
-        if (ht == null)
-            return null;
+    Map<String, FieldAndMethods> getFieldAndMethodsObjects(
+            Scriptable scope, Object javaObject, boolean isStatic) {
+        Map<String, FieldAndMethods> ht = isStatic ? staticFieldAndMethods : fieldAndMethods;
+        if (ht == null) return null;
         int len = ht.size();
-        Map<String,FieldAndMethods> result = new HashMap<String,FieldAndMethods>(len);
-        for (FieldAndMethods fam: ht.values()) {
-            FieldAndMethods famNew = new FieldAndMethods(scope, fam.methods,
-                                                         fam.field);
+        Map<String, FieldAndMethods> result = new HashMap<String, FieldAndMethods>(len);
+        for (FieldAndMethods fam : ht.values()) {
+            FieldAndMethods famNew = new FieldAndMethods(scope, fam.methods, fam.field);
             famNew.javaObject = javaObject;
             result.put(fam.field.getName(), famNew);
         }
         return result;
     }
 
-    static JavaMembers lookupClass(Scriptable scope, Class<?> dynamicType,
-                                   Class<?> staticType, boolean includeProtected)
-    {
+    static JavaMembers lookupClass(
+            Scriptable scope, Class<?> dynamicType, Class<?> staticType, boolean includeProtected) {
         JavaMembers members;
         ClassCache cache = ClassCache.get(scope);
-        Map<Class<?>,JavaMembers> ct = cache.getClassCacheMap();
+        Map<ClassCache.CacheKey, JavaMembers> ct = cache.getClassCacheMap();
 
         Class<?> cl = dynamicType;
-        for (;;) {
-            members = ct.get(cl);
+        Object secCtx = getSecurityContext();
+        for (; ; ) {
+            members = ct.get(new ClassCache.CacheKey(cl, secCtx));
             if (members != null) {
                 if (cl != dynamicType) {
                     // member lookup for the original class failed because of
                     // missing privileges, cache the result so we don't try again
-                    ct.put(dynamicType, members);
+                    ct.put(new ClassCache.CacheKey(dynamicType, secCtx), members);
                 }
                 return members;
             }
             try {
-                members = new JavaMembers(cache.getAssociatedScope(), cl,
-                        includeProtected);
+                members = createJavaMembers(cache.getAssociatedScope(), cl, includeProtected);
                 break;
             } catch (SecurityException e) {
                 // Reflection may fail for objects that are in a restricted
@@ -869,34 +828,58 @@ class JavaMembers
         }
 
         if (cache.isCachingEnabled()) {
-            ct.put(cl, members);
+            ct.put(new ClassCache.CacheKey(cl, secCtx), members);
             if (cl != dynamicType) {
                 // member lookup for the original class failed because of
                 // missing privileges, cache the result so we don't try again
-                ct.put(dynamicType, members);
+                ct.put(new ClassCache.CacheKey(dynamicType, secCtx), members);
             }
         }
         return members;
     }
 
-    RuntimeException reportMemberNotFound(String memberName)
-    {
+    private static JavaMembers createJavaMembers(
+            Scriptable associatedScope, Class<?> cl, boolean includeProtected) {
+        if (STRICT_REFLECTIVE_ACCESS) {
+            return new JavaMembers_jdk11(associatedScope, cl, includeProtected);
+        } else {
+            return new JavaMembers(associatedScope, cl, includeProtected);
+        }
+    }
+
+    private static Object getSecurityContext() {
+        Object sec = null;
+        SecurityManager sm = System.getSecurityManager();
+        if (sm != null) {
+            sec = sm.getSecurityContext();
+            if (sec instanceof AccessControlContext) {
+                try {
+                    ((AccessControlContext) sec).checkPermission(allPermission);
+                    // if we have allPermission, we do not need to store the
+                    // security object in the cache key
+                    return null;
+                } catch (SecurityException e) {
+                }
+            }
+        }
+        return sec;
+    }
+
+    RuntimeException reportMemberNotFound(String memberName) {
         return Context.reportRuntimeErrorById(
-            "msg.java.member.not.found", cl.getName(), memberName);
+                "msg.java.member.not.found", cl.getName(), memberName);
     }
 
     private Class<?> cl;
-    private Map<String,Object> members;
-    private Map<String,FieldAndMethods> fieldAndMethods;
-    private Map<String,Object> staticMembers;
-    private Map<String,FieldAndMethods> staticFieldAndMethods;
+    private Map<String, Object> members;
+    private Map<String, FieldAndMethods> fieldAndMethods;
+    private Map<String, Object> staticMembers;
+    private Map<String, FieldAndMethods> staticFieldAndMethods;
     NativeJavaMethod ctors; // we use NativeJavaMethod for ctor overload resolution
 }
 
-class BeanProperty
-{
-    BeanProperty(MemberBox getter, MemberBox setter, NativeJavaMethod setters)
-    {
+class BeanProperty {
+    BeanProperty(MemberBox getter, MemberBox setter, NativeJavaMethod setters) {
         this.getter = getter;
         this.setter = setter;
         this.setters = setters;
@@ -907,12 +890,10 @@ class BeanProperty
     NativeJavaMethod setters;
 }
 
-class FieldAndMethods extends NativeJavaMethod
-{
+class FieldAndMethods extends NativeJavaMethod {
     private static final long serialVersionUID = -9222428244284796755L;
 
-    FieldAndMethods(Scriptable scope, MemberBox[] methods, Field field)
-    {
+    FieldAndMethods(Scriptable scope, MemberBox[] methods, Field field) {
         super(methods);
         this.field = field;
         setParentScope(scope);
@@ -920,20 +901,17 @@ class FieldAndMethods extends NativeJavaMethod
     }
 
     @Override
-    public Object getDefaultValue(Class<?> hint)
-    {
-        if (hint == ScriptRuntime.FunctionClass)
-            return this;
+    public Object getDefaultValue(Class<?> hint) {
+        if (hint == ScriptRuntime.FunctionClass) return this;
         Object rval;
         Type type;
         try {
             rval = field.get(javaObject);
             type = field.getGenericType();
         } catch (IllegalAccessException accEx) {
-            throw Context.reportRuntimeErrorById(
-                "msg.java.internal.private", field.getName());
+            throw Context.reportRuntimeErrorById("msg.java.internal.private", field.getName());
         }
-        Context cx  = Context.getContext();
+        Context cx = Context.getContext();
         rval = cx.getWrapFactory().wrap(cx, this, rval, type);
         if (rval instanceof Scriptable) {
             rval = ((Scriptable) rval).getDefaultValue(hint);
@@ -943,41 +921,4 @@ class FieldAndMethods extends NativeJavaMethod
 
     Field field;
     Object javaObject;
-}
-
-class ToJsonFunction extends BaseFunction
-{
-    private static final long serialVersionUID = 1L;
-    static final ToJsonFunction INSTANCE  = new ToJsonFunction();
-
-    @Override
-    public Object call(Context cx, Scriptable scope, Scriptable thisObj,
-            Object[] args) {
-
-        if (thisObj instanceof NativeJavaMap
-                || thisObj instanceof ArrayScriptable) {
-            return thisObj;
-        }
-        Object jo = ((NativeJavaObject) thisObj).javaObject;
-       
-        if (jo instanceof Number
-                || jo instanceof CharSequence 
-                || jo instanceof Boolean
-                || jo instanceof Map
-                || jo instanceof Iterable) {
-            return jo;
-        } else if (jo instanceof Enum) {
-            return ((Enum<?>) jo).name();
-        } else if (jo instanceof java.sql.Date) { // Date-Time handling.
-            jo = ((java.sql.Date) jo).toLocalDate();
-        } else if (jo instanceof java.sql.Time) {
-            jo = ((java.sql.Time) jo).toLocalTime();
-        } else if (jo instanceof java.util.Date) {
-            jo = ((Date) jo).toInstant();
-        } else if (jo instanceof Calendar) {
-            jo = ((Calendar)jo).toInstant();
-        }
-
-        return jo.toString();
-    }
 }
