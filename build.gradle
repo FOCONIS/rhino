@@ -4,7 +4,7 @@ plugins {
     id 'eclipse'
     id 'maven-publish'
     id 'signing'
-    // id 'jacoco'
+    id 'jacoco'
     id 'distribution'
     id 'checkstyle'
     id 'com.diffplug.spotless' version "5.12.1"
@@ -76,7 +76,7 @@ test {
         jvmArgs += ['--add-opens', 'java.desktop/javax.swing.table=ALL-UNNAMED']
     }
 
-    // jacoco.excludes = ['**/testsrc_tests_ecma_3_RegExp_perlstress*']
+    jacoco.excludes = ['**/testsrc_tests_ecma_3_RegExp_perlstress*']
 
     systemProperty 'java.awt.headless', 'true'
     systemProperty 'mozilla.js.tests', 'testsrc/tests'
@@ -460,7 +460,7 @@ if (JavaVersion.current() > JavaVersion.VERSION_15
     }
     spotless.enforceCheck false
 }
-/*
+
 jacocoTestReport {
     dependsOn test
     reports {
@@ -468,7 +468,7 @@ jacocoTestReport {
         html.required = true
     }
 }
-*/
+
 checkstyle {
     configFile = file("${projectDir}/checkstyle.xml")
     sourceSets = [ project.sourceSets.main ]
