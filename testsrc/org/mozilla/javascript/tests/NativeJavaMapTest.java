@@ -147,26 +147,6 @@ public class NativeJavaMapTest extends TestCase {
                 (NativeArray) runScript("Object.keys(value)", mapInt, Function.identity(), true);
         assertTrue(resInt.contains("42")); // Object.keys always return Strings as key
     }
-    
-    public void testMethodOverwrite() {
-      Map<String, String> map = new HashMap<>();
-
-      map.put("size", "42");
-      map.put("clear", "foo");
-
-      NativeArray res = (NativeArray) runScript("Object.keys(value)", map, Function.identity());
-      assertEquals(2, res.size());
-      assertTrue(res.contains("size"));
-      assertTrue(res.contains("clear"));
-
-      String resStr = runScriptAsString("var size = value.size();\n"
-          + "var getSize = value.get('size');\n"
-          + "value.clear();\n"
-          + "[size, getSize]", map);
-      
-      assertTrue(map.isEmpty()); // Object.keys always return Strings as key
-      assertEquals("2,42", resStr);
-  }
 
     public void testJavaMapWithoutAccessEntries() {
         Map<Object, Object> map = new HashMap<>();
