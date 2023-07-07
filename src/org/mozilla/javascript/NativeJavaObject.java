@@ -491,8 +491,8 @@ public class NativeJavaObject implements Scriptable, SymbolScriptable, Wrapper, 
     /**
      * Not intended for public use. Callers should use the public API Context.toType.
      *
-     * @see org.mozilla.javascript.Context#jsToJava(Object, Class)
      * @deprecated as of 1.5 Release 4
+     * @see org.mozilla.javascript.Context#jsToJava(Object, Class)
      */
     @Deprecated
     public static Object coerceType(Class<?> type, Object value) {

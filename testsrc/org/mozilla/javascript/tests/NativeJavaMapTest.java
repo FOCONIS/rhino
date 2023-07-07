@@ -174,7 +174,7 @@ public class NativeJavaMapTest {
     }
 
     @Test
-    public void testStringIntMap() {
+    public void stringIntMap() {
         Map<String, Object> stringMap = new HashMap<String, Object>() {};
         stringMap.put("42", "foo");
 
@@ -195,7 +195,7 @@ public class NativeJavaMapTest {
     }
 
     @Test
-    public void testEnumMap() {
+    public void enumMap() {
         Map<AccessMode, Object> enumMap = new EnumMap<AccessMode, Object>(AccessMode.class) {};
         enumMap.put(AccessMode.READ, "foo");
 
@@ -229,8 +229,8 @@ public class NativeJavaMapTest {
             assertEquals(6, res.size());
             assertEquals("a", res.get(0));
             assertEquals("b", res.get(1));
-            assertEquals(123.0, Context.toNumber(res.get(2)));
-            assertEquals(234.0, Context.toNumber(res.get(3)));
+            assertEquals(123.0, Context.toNumber(res.get(2)), 0.000001);
+            assertEquals(234.0, Context.toNumber(res.get(3)), 0.000001);
             assertEquals(o, res.get(4));
             assertEquals(o, res.get(5));
         }
@@ -244,8 +244,8 @@ public class NativeJavaMapTest {
             assertEquals("b", e0.get(1));
 
             NativeArray e1 = (NativeArray) res.get(1);
-            assertEquals(123.0, Context.toNumber(e1.get(0)));
-            assertEquals(234.0, Context.toNumber(e1.get(1)));
+            assertEquals(123.0, Context.toNumber(e1.get(0)), 0.000001);
+            assertEquals(234.0, Context.toNumber(e1.get(1)), 0.000001);
 
             NativeArray e2 = (NativeArray) res.get(2);
             assertEquals(o, e2.get(0));
