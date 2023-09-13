@@ -14,6 +14,7 @@ import java.math.MathContext;
 import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.ResourceBundle;
 import java.util.function.BiConsumer;
 import org.mozilla.javascript.ast.FunctionNode;
@@ -3459,6 +3460,9 @@ public class ScriptRuntime {
         }
         if (y instanceof Wrapper) {
             y = ((Wrapper) y).unwrap();
+        }
+        if (Objects.equals(x, y)) {
+            return true;
         }
         if (!typeof(x).equals(typeof(y))) {
             return false;
