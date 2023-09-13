@@ -6,7 +6,12 @@ module org.mozilla.rhino {
     exports org.mozilla.javascript.commonjs.module;
     exports org.mozilla.javascript.commonjs.module.provider;
     exports org.mozilla.javascript.debug;
-    exports org.mozilla.javascript.engine;
+
+    // optimizer has to be exported for compiled classes
+    exports org.mozilla.javascript.optimizer;
+
+    // engine not part of the runtime
+    // exports org.mozilla.javascript.engine;
 
     // exports org.mozilla.javascript.json;
     // exports org.mozilla.javascript.optimizer;
@@ -15,11 +20,11 @@ module org.mozilla.rhino {
     exports org.mozilla.javascript.typedarrays;
     exports org.mozilla.javascript.xml;
 
-    // from the toolsrc dir
-    exports org.mozilla.javascript.tools;
-    exports org.mozilla.javascript.tools.debugger;
-    exports org.mozilla.javascript.tools.jsc;
-    exports org.mozilla.javascript.tools.shell;
+    // from the toolsrc dir (not part of the runtime)
+    // exports org.mozilla.javascript.tools;
+    // exports org.mozilla.javascript.tools.debugger;
+    // exports org.mozilla.javascript.tools.jsc;
+    // exports org.mozilla.javascript.tools.shell;
 
     // required for (optional) property-change support
     requires static java.desktop;
@@ -27,6 +32,7 @@ module org.mozilla.rhino {
     // required for (optional) ScriptEngineFactory
     requires static java.scripting;
 
-    provides javax.script.ScriptEngineFactory with
-            org.mozilla.javascript.engine.RhinoScriptEngineFactory;
+// not part of the runtime
+// provides javax.script.ScriptEngineFactory with
+//        org.mozilla.javascript.engine.RhinoScriptEngineFactory;
 }
