@@ -31,11 +31,6 @@ jobs:
       with:
         java-version: ${{ matrix.java }}
         distribution: 'adopt'
-    - if: matrix.java == '8'
-      name: Check everything with Gradle on Java 8
-      run: ./gradlew check jacocoTestReport
-    - if: matrix.java != '8'
-      name: Check everything with Gradle, modular Java
       run: >-
         ./gradlew check jacocoTestReport
         -Dorg.gradle.jvmargs="--add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED
