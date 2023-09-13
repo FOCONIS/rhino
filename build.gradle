@@ -475,6 +475,8 @@ checkstyle {
     sourceSets = [ project.sourceSets.main ]
 }
 
+checkstyleMain.exclude('module-info.java')
+
 distributions {
     main {
         contents {
