@@ -1,4 +1,4 @@
-/* -*- Mode: java; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+package examples;/* -*- Mode: java; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -11,21 +11,21 @@ import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
 
 /**
- * Matrix: An example host object class that implements the Scriptable interface.
+ * examples.Matrix: An example host object class that implements the Scriptable interface.
  *
  * <p>Built-in JavaScript arrays don't handle multiple dimensions gracefully: the script writer must
- * create every array in an array of arrays. The Matrix class takes care of that by automatically
- * allocating arrays for every index that is accessed. What's more, the Matrix constructor takes a
- * integer argument that specifies the dimension of the Matrix. If m is a Matrix with dimension 3,
- * then m[0] will be a Matrix with dimension 1, and m[0][0] will be an Array.
+ * create every array in an array of arrays. The examples.Matrix class takes care of that by automatically
+ * allocating arrays for every index that is accessed. What's more, the examples.Matrix constructor takes a
+ * integer argument that specifies the dimension of the examples.Matrix. If m is a examples.Matrix with dimension 3,
+ * then m[0] will be a examples.Matrix with dimension 1, and m[0][0] will be an Array.
  *
- * <p>Here's a shell session showing the Matrix object in action:
+ * <p>Here's a shell session showing the examples.Matrix object in action:
  *
  * <pre>
- * js> defineClass("Matrix")
- * js> var m = new Matrix(2); // A constructor call, see "Matrix(int dimension)"
- * js> m                      // Object.toString will call "Matrix.getClassName()"
- * [object Matrix]
+ * js> defineClass("examples.Matrix")
+ * js> var m = new examples.Matrix(2); // A constructor call, see "examples.Matrix(int dimension)"
+ * js> m                      // Object.toString will call "examples.Matrix.getClassName()"
+ * [object examples.Matrix]
  * js> m[0][0] = 3;
  * 3
  * js> uneval(m[0]);          // an array was created automatically!
@@ -50,23 +50,23 @@ public class Matrix implements Scriptable {
      * The zero-parameter constructor.
      *
      * <p>When ScriptableObject.defineClass is called with this class, it will construct
-     * Matrix.prototype using this constructor.
+     * examples.Matrix.prototype using this constructor.
      */
     public Matrix() {}
 
     /** The Java constructor, also used to define the JavaScript constructor. */
     public Matrix(int dimension) {
         if (dimension <= 0) {
-            throw Context.reportRuntimeError("Dimension of Matrix must be greater than zero");
+            throw Context.reportRuntimeError("Dimension of examples.Matrix must be greater than zero");
         }
         dim = dimension;
         list = new ArrayList<Object>();
     }
 
-    /** Returns the name of this JavaScript class, "Matrix". */
+    /** Returns the name of this JavaScript class, "examples.Matrix". */
     @Override
     public String getClassName() {
-        return "Matrix";
+        return "examples.Matrix";
     }
 
     /**
@@ -213,7 +213,7 @@ public class Matrix implements Scriptable {
      */
     @Override
     public Object getDefaultValue(Class<?> typeHint) {
-        return "[object Matrix]";
+        return "[object examples.Matrix]";
     }
 
     /**

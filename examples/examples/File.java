@@ -1,4 +1,4 @@
-/* -*- Mode: java; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+package examples;/* -*- Mode: java; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -23,17 +23,17 @@ import org.mozilla.javascript.annotations.JSFunction;
 import org.mozilla.javascript.annotations.JSGetter;
 
 /**
- * Define a simple JavaScript File object.
+ * Define a simple JavaScript examples.File object.
  *
- * <p>This isn't intended to be any sort of definitive attempt at a standard File object for
+ * <p>This isn't intended to be any sort of definitive attempt at a standard examples.File object for
  * JavaScript, but instead is an example of a more involved definition of a host object.
  *
- * <p>Example of use of the File object:
+ * <p>Example of use of the examples.File object:
  *
  * <pre>
- * js> defineClass("File")
- * js> file = new File("myfile.txt");
- * [object File]
+ * js> defineClass("examples.File")
+ * js> file = new examples.File("myfile.txt");
+ * [object examples.File]
  * js> file.writeLine("one");                       <i>only now is file actually opened</i>
  * js> file.writeLine("two");
  * js> file.writeLine("thr", "ee");
@@ -44,7 +44,7 @@ import org.mozilla.javascript.annotations.JSGetter;
  * js>
  * </pre>
  *
- * File errors or end-of-file signaled by thrown Java exceptions will be wrapped as JavaScript
+ * examples.File errors or end-of-file signaled by thrown Java exceptions will be wrapped as JavaScript
  * exceptions when called from JavaScript, and may be caught within JavaScript.
  *
  * @author Norris Boyd
@@ -56,13 +56,13 @@ public class File extends ScriptableObject {
     /**
      * The zero-parameter constructor.
      *
-     * <p>When Context.defineClass is called with this class, it will construct File.prototype using
+     * <p>When Context.defineClass is called with this class, it will construct examples.File.prototype using
      * this constructor.
      */
     public File() {}
 
     /**
-     * The Java method defining the JavaScript File constructor.
+     * The Java method defining the JavaScript examples.File constructor.
      *
      * <p>If the constructor has one or more arguments, and the first argument is not undefined, the
      * argument is converted to a string as used as the filename.
@@ -83,10 +83,10 @@ public class File extends ScriptableObject {
         return result;
     }
 
-    /** Returns the name of this JavaScript class, "File". */
+    /** Returns the name of this JavaScript class, "examples.File". */
     @Override
     public String getClassName() {
-        return "File";
+        return "examples.File";
     }
 
     /**
@@ -277,17 +277,17 @@ public class File extends ScriptableObject {
     }
 
     /**
-     * Perform the instanceof check and return the downcasted File object.
+     * Perform the instanceof check and return the downcasted examples.File object.
      *
-     * <p>This is necessary since methods may reside in the File.prototype object and scripts can
+     * <p>This is necessary since methods may reside in the examples.File.prototype object and scripts can
      * dynamically alter prototype chains. For example:
      *
      * <pre>
-     * js> defineClass("File");
+     * js> defineClass("examples.File");
      * js> o = {};
      * [object Object]
-     * js> o.__proto__ = File.prototype;
-     * [object File]
+     * js> o.__proto__ = examples.File.prototype;
+     * [object examples.File]
      * js> o.write("hi");
      * js: called on incompatible object
      * </pre>

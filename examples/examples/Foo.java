@@ -1,4 +1,4 @@
-/* -*- Mode: java; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+package examples;/* -*- Mode: java; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -14,12 +14,12 @@ import org.mozilla.javascript.annotations.JSGetter;
 /**
  * An example host object class.
  *
- * <p>Here's a shell session showing the Foo object in action:
+ * <p>Here's a shell session showing the examples.Foo object in action:
  *
  * <pre>
- * js> defineClass("Foo")
- * js> foo = new Foo();         <i>A constructor call, see <a href="#Foo">Foo</a> below.</i>
- * [object Foo]                 <i>The "Foo" here comes from <a href"#getClassName">getClassName</a>.</i>
+ * js> defineClass("examples.Foo")
+ * js> foo = new examples.Foo();         <i>A constructor call, see <a href="#examples.Foo">examples.Foo</a> below.</i>
+ * [object examples.Foo]                 <i>The "examples.Foo" here comes from <a href"#getClassName">getClassName</a>.</i>
  * js> foo.counter;             <i>The counter property is defined by the <code>defineProperty</code></i>
  * 0                            <i>call below and implemented by the <a href="#getCounter">getCounter</a></i>
  * js> foo.counter;             <i>method below.</i>
@@ -31,12 +31,12 @@ import org.mozilla.javascript.annotations.JSGetter;
  * 0
  * js> foo.counter;
  * 1
- * js> bar = new Foo(37);       <i>Create a new instance.</i>
- * [object Foo]
+ * js> bar = new examples.Foo(37);       <i>Create a new instance.</i>
+ * [object examples.Foo]
  * js> bar.counter;             <i>This instance's counter is distinct from</i>
  * 37                           <i>the other instance's counter.</i>
  * js> foo.varargs(3, "hi");    <i>Calls <a href="#varargs">varargs</a>.</i>
- * this = [object Foo]; args = [3, hi]
+ * this = [object examples.Foo]; args = [3, hi]
  * js> foo[7] = 34;             <i>Since we extended ScriptableObject, we get</i>
  * 34                           <i>all the behavior of a JavaScript object</i>
  * js> foo.a = 23;              <i>for free.</i>
@@ -57,16 +57,16 @@ public class Foo extends ScriptableObject {
     /**
      * The zero-parameter constructor.
      *
-     * <p>When Context.defineClass is called with this class, it will construct Foo.prototype using
+     * <p>When Context.defineClass is called with this class, it will construct examples.Foo.prototype using
      * this constructor.
      */
     public Foo() {}
 
     /**
-     * The Java method defining the JavaScript Foo constructor.
+     * The Java method defining the JavaScript examples.Foo constructor.
      *
-     * <p>Takes an initial value for the counter property. Note that in the example Shell session
-     * above, we didn't supply a argument to the Foo constructor. This means that the Undefined
+     * <p>Takes an initial value for the counter property. Note that in the example examples.Shell session
+     * above, we didn't supply a argument to the examples.Foo constructor. This means that the Undefined
      * value is used as the value of the argument, and when the argument is converted to an integer,
      * Undefined becomes 0.
      */
@@ -74,10 +74,10 @@ public class Foo extends ScriptableObject {
         counter = counterStart;
     }
 
-    /** Returns the name of this JavaScript class, "Foo". */
+    /** Returns the name of this JavaScript class, "examples.Foo". */
     @Override
     public String getClassName() {
-        return "Foo";
+        return "examples.Foo";
     }
 
     /**

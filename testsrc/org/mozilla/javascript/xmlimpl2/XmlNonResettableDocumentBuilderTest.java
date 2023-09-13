@@ -1,4 +1,4 @@
-package org.mozilla.javascript.xmlimpl;
+package org.mozilla.javascript.xmlimpl2;
 
 import org.junit.After;
 import org.junit.Assert;

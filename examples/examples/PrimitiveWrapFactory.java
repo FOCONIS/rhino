@@ -1,4 +1,4 @@
-/* -*- Mode: java; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+package examples;/* -*- Mode: java; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -19,7 +19,7 @@ import org.mozilla.javascript.WrapFactory;
  * will still produce a wrapped Java object since the WrapFactory.wrapNewObject method is not
  * overridden.
  *
- * <p>The PrimitiveWrapFactory is enabled on a Context by calling setWrapFactory on that context.
+ * <p>The examples.PrimitiveWrapFactory is enabled on a Context by calling setWrapFactory on that context.
  */
 public class PrimitiveWrapFactory extends WrapFactory {
 

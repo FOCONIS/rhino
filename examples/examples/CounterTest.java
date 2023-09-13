@@ -1,4 +1,4 @@
-/* -*- Mode: java; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+package examples;/* -*- Mode: java; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -29,7 +29,7 @@ public class CounterTest {
             Scriptable scope = cx.initStandardObjects();
             ScriptableObject.defineClass(scope, Counter.class);
 
-            Scriptable testCounter = cx.newObject(scope, "Counter");
+            Scriptable testCounter = cx.newObject(scope, "examples.Counter");
 
             Object count = ScriptableObject.getProperty(testCounter, "count");
             System.out.println("count = " + count);
