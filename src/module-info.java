@@ -20,11 +20,11 @@ module org.mozilla.rhino {
     exports org.mozilla.javascript.typedarrays;
     exports org.mozilla.javascript.xml;
 
-    // from the toolsrc dir (not part of the runtime)
-    // exports org.mozilla.javascript.tools;
-    // exports org.mozilla.javascript.tools.debugger;
-    // exports org.mozilla.javascript.tools.jsc;
-    // exports org.mozilla.javascript.tools.shell;
+    // from the toolsrc dir (not part of the runtime - needs to be split later)
+    exports org.mozilla.javascript.tools;
+    exports org.mozilla.javascript.tools.debugger;
+    exports org.mozilla.javascript.tools.jsc;
+    exports org.mozilla.javascript.tools.shell;
 
     // required for (optional) property-change support
     requires static java.desktop;
