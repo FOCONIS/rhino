@@ -22,6 +22,7 @@ import java.security.Permission;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -328,7 +329,8 @@ class JavaMembers {
      */
     private Method[] discoverAccessibleMethods(
             Class<?> clazz, boolean includeProtected, boolean includePrivate) {
-        Map<MethodSignature, Method> map = new HashMap<>();
+        Map<MethodSignature, Method> map =
+                new LinkedHashMap<>(); // use linked hash map for deterministic discovery
         discoverAccessibleMethods(clazz, map, includeProtected, includePrivate);
         return map.values().toArray(new Method[0]);
     }
