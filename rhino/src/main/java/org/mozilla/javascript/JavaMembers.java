@@ -348,11 +348,8 @@ class JavaMembers {
                                 int mods = method.getModifiers();
 
                                 if (isPublic(mods) || isProtected(mods) || includePrivate) {
-                                    MethodSignature sig = new MethodSignature(method);
-                                    if (!map.containsKey(sig)) {
-                                        if (includePrivate) method.trySetAccessible();
-                                        map.put(sig, method);
-                                    }
+                                    if (includePrivate) method.trySetAccessible();
+                                    registerMethod(map, method);
                                 }
                             }
                             Class<?>[] interfaces = clazz.getInterfaces();
@@ -365,11 +362,7 @@ class JavaMembers {
                             // Some security settings (i.e., applets) disallow
                             // access to Class.getDeclaredMethods. Fall back to
                             // Class.getMethods.
-                            Method[] methods = clazz.getMethods();
-                            for (Method method : methods) {
-                                MethodSignature sig = new MethodSignature(method);
-                                if (!map.containsKey(sig)) map.put(sig, method);
-                            }
+                            discoverPublicMethods(clazz, map);
                             break; // getMethods gets superclass methods, no
                             // need to loop any more
                         }
@@ -409,7 +402,12 @@ class JavaMembers {
     static void registerMethod(Map<MethodSignature, Method> map, Method method) {
         MethodSignature sig = new MethodSignature(method);
         // Array may contain methods with same signature but different return value!
-        if (!map.containsKey(sig)) {
+        Method existing = map.get(sig);
+        if (existing == null) {
+            map.put(sig, method);
+        } else if (existing.getReturnType().isAssignableFrom(method.getReturnType())) {
+            // if there are multiple methods with same name (which is allowed in bytecode, but not
+            // in JLS) we will take the best method
             map.put(sig, method);
         }
     }
