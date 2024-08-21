@@ -1,0 +1,140 @@
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelVersion>4.0.0</modelVersion>
+
+
+
+  <groupId>org.mozilla</groupId>
+  <artifactId>rhino</artifactId>
+  <name>Mozilla Rhino</name>
+  <version>1.7.14-FOC2</version>
+
+  <packaging>jar</packaging>
+  <description>
+      Rhino is an open-source implementation of JavaScript written entirely in Java. It is typically
+      embedded into Java applications to provide scripting to end users.
+  </description>
+  <url>https://developer.mozilla.org/en/Rhino</url>
+
+  <licenses>
+    <license>
+      <name>Mozilla Public License, Version 2.0</name>
+      <url>http://www.mozilla.org/MPL/2.0/index.txt</url>
+    </license>
+  </licenses>
+
+
+  <organization>
+    <name>The Mozilla Foundation</name>
+    <url>http://www.mozilla.org</url>
+  </organization>
+  
+  <distributionManagement>
+		<!-- 
+		<site>
+			<id>foconis-zak-site</id>
+			<url>sftp://bamboo@repo.foconis.de/var/www/html/repo/sites/de.foconis.jfof/foconis-parent</url>
+		</site>
+		 -->
+		<repository>
+			<id>default</id>
+			<name>FOCONIS Release Repository</name>
+			<url>sftp://bamboo@repo.foconis.de/var/www/html/repo/maven-release/</url>
+		</repository>
+	</distributionManagement>  
+    <build>
+		<plugins>
+
+			<!-- Defaults -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-install-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>default-install</id>
+						<phase>install</phase>
+						<configuration>
+							<skip>false</skip>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-deploy-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>default-deploy</id>
+						<phase>deploy</phase>
+						<configuration>
+							<skip>true</skip>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-deploy-plugin</artifactId>
+				<executions>
+				
+					<execution>
+						<phase>deploy</phase>
+						<goals>
+							<goal>deploy-file</goal>
+						</goals>
+						<id>rhino-jar</id>
+						<configuration>
+							<groupId>org.mozilla</groupId>
+							<artifactId>rhino</artifactId>
+							<version>${project.version}</version>
+							<file>../buildGradle/libs/rhino-${project.version}.jar</file>
+							<url>sftp://bamboo@repo.foconis.de/var/www/html/repo/maven-release/</url>
+						</configuration>
+					</execution>
+				
+					<execution>
+						<phase>deploy</phase>
+						<goals>
+							<goal>deploy-file</goal>
+						</goals>
+						<id>rhino-sources</id>
+						<configuration>
+							<groupId>org.mozilla</groupId>
+							<artifactId>rhino</artifactId>
+							<version>${project.version}</version>
+							<classifier>sources</classifier>
+							<file>../buildGradle/libs/rhino-${project.version}-sources.jar</file>
+							<url>sftp://bamboo@repo.foconis.de/var/www/html/repo/maven-release/</url>
+						</configuration>
+					</execution>
+					
+										<execution>
+						<phase>deploy</phase>
+						<goals>
+							<goal>deploy-file</goal>
+						</goals>
+						<id>rhino-javadoc</id>
+						<configuration>
+							<groupId>org.mozilla</groupId>
+							<artifactId>rhino</artifactId>
+							<version>${project.version}</version>
+							<classifier>javadoc</classifier>
+							<file>../buildGradle/libs/rhino-${project.version}-javadoc.jar</file>
+							<url>sftp://bamboo@repo.foconis.de/var/www/html/repo/maven-release/</url>
+						</configuration>
+					</execution>
+				
+				</executions>
+			</plugin>
+		</plugins>
+		<extensions>
+			<extension>
+				<groupId>org.apache.maven.wagon</groupId>
+				<artifactId>wagon-ssh</artifactId>
+				<version>2.12</version>
+			</extension>
+		</extensions>
+	</build>
+</project>
