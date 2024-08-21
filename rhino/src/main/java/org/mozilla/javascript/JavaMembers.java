@@ -15,12 +15,14 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.Type;
 import java.security.AccessControlContext;
 import java.security.AllPermission;
 import java.security.Permission;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -96,17 +98,17 @@ class JavaMembers {
         }
         Context cx = Context.getContext();
         Object rval;
-        Class<?> type;
+        Type type;
         try {
             if (member instanceof BeanProperty) {
                 BeanProperty bp = (BeanProperty) member;
                 if (bp.getter == null) return Scriptable.NOT_FOUND;
                 rval = bp.getter.invoke(javaObject, Context.emptyArgs);
-                type = bp.getter.method().getReturnType();
+                type = bp.getter.method().getGenericReturnType();
             } else {
                 Field field = (Field) member;
                 rval = field.get(isStatic ? null : javaObject);
-                type = field.getType();
+                type = field.getGenericType();
             }
         } catch (Exception ex) {
             throw Context.throwAsScriptRuntimeEx(ex);
@@ -117,6 +119,16 @@ class JavaMembers {
     }
 
     void put(Scriptable scope, String name, Object javaObject, Object value, boolean isStatic) {
+        put(scope, name, javaObject, value, isStatic, null);
+    }
+
+    void put(
+            Scriptable scope,
+            String name,
+            Object javaObject,
+            Object value,
+            boolean isStatic,
+            JavaTypeResolver typeResolver) {
         Map<String, Object> ht = isStatic ? staticMembers : members;
         Object member = ht.get(name);
         if (!isStatic && member == null) {
@@ -140,6 +152,9 @@ class JavaMembers {
             // setter to use:
             if (bp.setters == null || value == null) {
                 Class<?> setType = bp.setter.argTypes[0];
+                if (typeResolver != null && bp.setter.genericArgTypes != null) {
+                    setType = typeResolver.resolve(bp.setter.genericArgTypes[0]);
+                }
                 Object[] args = {Context.jsToJava(value, setType)};
                 try {
                     bp.setter.invoke(javaObject, args);
@@ -161,7 +176,13 @@ class JavaMembers {
                 throw Context.reportRuntimeErrorById(str, name);
             }
             Field field = (Field) member;
-            Object javaValue = Context.jsToJava(value, field.getType());
+            Class<?> fieldType;
+            if (typeResolver != null) {
+                fieldType = typeResolver.resolve(field.getGenericType());
+            } else {
+                fieldType = field.getType();
+            }
+            Object javaValue = Context.jsToJava(value, fieldType);
             try {
                 field.set(javaObject, javaValue);
             } catch (IllegalAccessException accessEx) {
@@ -306,7 +327,8 @@ class JavaMembers {
      */
     private Method[] discoverAccessibleMethods(
             Class<?> clazz, boolean includeProtected, boolean includePrivate) {
-        Map<MethodSignature, Method> map = new HashMap<>();
+        Map<MethodSignature, Method> map =
+                new LinkedHashMap<>(); // use linked hash map for deterministic discovery
         discoverAccessibleMethods(clazz, map, includeProtected, includePrivate);
         return map.values().toArray(new Method[0]);
     }
@@ -896,10 +918,10 @@ class FieldAndMethods extends NativeJavaMethod {
     public Object getDefaultValue(Class<?> hint) {
         if (hint == ScriptRuntime.FunctionClass) return this;
         Object rval;
-        Class<?> type;
+        Type type;
         try {
             rval = field.get(javaObject);
-            type = field.getType();
+            type = field.getGenericType();
         } catch (IllegalAccessException accEx) {
             throw Context.reportRuntimeErrorById("msg.java.internal.private", field.getName());
         }
