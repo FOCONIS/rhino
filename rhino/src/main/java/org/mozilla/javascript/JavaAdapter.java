@@ -25,8 +25,12 @@ import java.util.Map;
 import java.util.Set;
 import org.mozilla.classfile.ByteCode;
 import org.mozilla.classfile.ClassFileWriter;
+// CHECKME: We might split this class in a LcJavaAdapter?
+import org.mozilla.javascript.lc.NativeJavaClass;
+import org.mozilla.javascript.lc.NativeJavaMethod;
+import org.mozilla.javascript.lc.NativeJavaObject;
 
-public final class JavaAdapter implements IdFunctionCall {
+public final class JavaAdapter implements IdFunctionCall, EqualStateless {
     /**
      * Provides a key with which to distinguish previously generated adapter classes stored in a
      * hash table.

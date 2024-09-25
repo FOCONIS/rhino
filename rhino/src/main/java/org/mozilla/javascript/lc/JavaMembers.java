@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.javascript;
+package org.mozilla.javascript.lc;
 
 import static java.lang.reflect.Modifier.isProtected;
 import static java.lang.reflect.Modifier.isPublic;
@@ -24,6 +24,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import org.mozilla.javascript.ClassCache;
+import org.mozilla.javascript.Context;
+import org.mozilla.javascript.ContextFactory;
+import org.mozilla.javascript.Kit;
+import org.mozilla.javascript.MemberBox;
+import org.mozilla.javascript.ScriptRuntime;
+import org.mozilla.javascript.Scriptable;
+import org.mozilla.javascript.ScriptableObject;
 
 /**
  * @author Mike Shaver
@@ -31,7 +39,7 @@ import java.util.Map;
  * @see NativeJavaObject
  * @see NativeJavaClass
  */
-class JavaMembers {
+public class JavaMembers {
 
     private static final boolean STRICT_REFLECTIVE_ACCESS = isModularJava();
 
@@ -226,6 +234,26 @@ class JavaMembers {
         return sb.toString();
     }
 
+    public static String toJavaDeclaration(MemberBox memberBox) {
+        StringBuilder sb = new StringBuilder();
+        if (memberBox.isMethod()) {
+            Method method = memberBox.method();
+            sb.append(method.getReturnType());
+            sb.append(' ');
+            sb.append(method.getName());
+        } else {
+            Constructor<?> ctor = memberBox.ctor();
+            String name = ctor.getDeclaringClass().getName();
+            int lastDot = name.lastIndexOf('.');
+            if (lastDot >= 0) {
+                name = name.substring(lastDot + 1);
+            }
+            sb.append(name);
+        }
+        sb.append(JavaMembers.liveConnectSignature(memberBox.argTypes));
+        return sb.toString();
+    }
+
     private MemberBox findExplicitFunction(String name, boolean isStatic) {
         int sigStart = name.indexOf('(');
         if (sigStart < 0) {
@@ -334,7 +362,7 @@ class JavaMembers {
                                         map.computeIfAbsent(
                                                 sig,
                                                 k -> {
-                                                    method.setAccessible(true);
+                                                    LCBridge.instance.tryToMakeAccessible(method);
                                                     return method;
                                                 });
                                     } else {
@@ -673,7 +701,7 @@ class JavaMembers {
                     for (Field field : declared) {
                         int mod = field.getModifiers();
                         if (includePrivate || isPublic(mod) || isProtected(mod)) {
-                            if (!field.isAccessible()) field.setAccessible(true);
+                            if (!field.isAccessible()) LCBridge.instance.tryToMakeAccessible(field);
                             fieldsList.add(field);
                         }
                     }
@@ -783,12 +811,12 @@ class JavaMembers {
             Scriptable scope, Class<?> dynamicType, Class<?> staticType, boolean includeProtected) {
         JavaMembers members;
         ClassCache cache = ClassCache.get(scope);
-        Map<ClassCache.CacheKey, JavaMembers> ct = cache.getClassCacheMap();
+        Map<ClassCache.CacheKey, Object> ct = cache.getClassCacheMap();
 
         Class<?> cl = dynamicType;
         Object secCtx = getSecurityContext();
         for (; ; ) {
-            members = ct.get(new ClassCache.CacheKey(cl, secCtx));
+            members = (JavaMembers) ct.get(new ClassCache.CacheKey(cl, secCtx));
             if (members != null) {
                 if (cl != dynamicType) {
                     // member lookup for the original class failed because of
@@ -871,7 +899,7 @@ class JavaMembers {
     private Map<String, FieldAndMethods> fieldAndMethods;
     private Map<String, Object> staticMembers;
     private Map<String, FieldAndMethods> staticFieldAndMethods;
-    NativeJavaMethod ctors; // we use NativeJavaMethod for ctor overload resolution
+    public NativeJavaMethod ctors; // we use NativeJavaMethod for ctor overload resolution
 }
 
 class BeanProperty {

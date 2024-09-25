@@ -8,11 +8,11 @@ package org.mozilla.javascript.tests;
 import static org.junit.Assert.fail;
 
 import org.junit.Test;
-import org.mozilla.javascript.ClassShutter;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.EvaluatorException;
 import org.mozilla.javascript.RhinoException;
 import org.mozilla.javascript.Scriptable;
+import org.mozilla.javascript.lc.ClassShutter;
 
 /**
  * @author Norris Boyd

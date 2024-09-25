@@ -19,6 +19,11 @@ import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.function.BiConsumer;
 import org.mozilla.javascript.ast.FunctionNode;
+import org.mozilla.javascript.lc.ClassShutter;
+import org.mozilla.javascript.lc.ImporterTopLevel;
+import org.mozilla.javascript.lc.LCBridge;
+import org.mozilla.javascript.lc.NativeJavaMap;
+import org.mozilla.javascript.lc.NativeJavaObject;
 import org.mozilla.javascript.v8dtoa.DoubleConversion;
 import org.mozilla.javascript.v8dtoa.FastDtoa;
 import org.mozilla.javascript.xml.XMLLib;
@@ -304,26 +309,19 @@ public class ScriptRuntime {
         ScriptableObject s = initSafeStandardObjects(cx, scope, sealed);
 
         new LazilyLoadedCtor(
-                s, "Packages", "org.mozilla.javascript.NativeJavaTopPackage", sealed, true);
+                s, "Packages", "org.mozilla.javascript.lc.NativeJavaTopPackage", sealed, true);
         new LazilyLoadedCtor(
-                s, "getClass", "org.mozilla.javascript.NativeJavaTopPackage", sealed, true);
+                s, "getClass", "org.mozilla.javascript.lc.NativeJavaTopPackage", sealed, true);
         new LazilyLoadedCtor(s, "JavaAdapter", "org.mozilla.javascript.JavaAdapter", sealed, true);
         new LazilyLoadedCtor(
-                s, "JavaImporter", "org.mozilla.javascript.ImporterTopLevel", sealed, true);
+                s, "JavaImporter", "org.mozilla.javascript.lc.ImporterTopLevel", sealed, true);
 
-        for (String packageName : getTopPackageNames()) {
+        for (String packageName : LCBridge.instance.getTopPackageNames()) {
             new LazilyLoadedCtor(
-                    s, packageName, "org.mozilla.javascript.NativeJavaTopPackage", sealed, true);
+                    s, packageName, "org.mozilla.javascript.lc.NativeJavaTopPackage", sealed, true);
         }
 
         return s;
-    }
-
-    static String[] getTopPackageNames() {
-        // Include "android" top package if running on Android
-        return "Dalvik".equals(System.getProperty("java.vm.name"))
-                ? new String[] {"java", "javax", "org", "com", "edu", "net", "android"}
-                : new String[] {"java", "javax", "org", "com", "edu", "net"};
     }
 
     public static ScriptableObject getLibraryScopeOrNull(Scriptable scope) {

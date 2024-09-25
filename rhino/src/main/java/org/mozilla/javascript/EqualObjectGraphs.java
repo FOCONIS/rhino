@@ -18,6 +18,8 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import org.mozilla.javascript.debug.DebuggableObject;
+// TODO: There is still one special case. How to handle?
+import org.mozilla.javascript.lc.NativeJavaPackage;
 
 /**
  * An object that implements deep equality test of objects, including their reference graph
@@ -142,9 +144,9 @@ final class EqualObjectGraphs {
         if (o1 instanceof Wrapper) {
             return o2 instanceof Wrapper
                     && equalGraphs(((Wrapper) o1).unwrap(), ((Wrapper) o2).unwrap());
-        } else if (o1 instanceof NativeJavaTopPackage) {
+        } else if (o1 instanceof EqualStateless) {
             // stateless objects, must check before Scriptable
-            return o2 instanceof NativeJavaTopPackage;
+            return o2 instanceof EqualStateless && o1.getClass() == o2.getClass();
         } else if (o1 instanceof Scriptable) {
             return o2 instanceof Scriptable && equalScriptables((Scriptable) o1, (Scriptable) o2);
         } else if (o1 instanceof SymbolKey) {
@@ -160,10 +162,6 @@ final class EqualObjectGraphs {
             return o2 instanceof Map<?, ?> && equalMaps((Map<?, ?>) o1, (Map<?, ?>) o2);
         } else if (o1 instanceof Set<?>) {
             return o2 instanceof Set<?> && equalSets((Set<?>) o1, (Set<?>) o2);
-        } else if (o1 instanceof NativeGlobal) {
-            return o2 instanceof NativeGlobal; // stateless objects
-        } else if (o1 instanceof JavaAdapter) {
-            return o2 instanceof JavaAdapter; // stateless objects
         }
 
         // Fallback case for everything else.

@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.javascript;
+package org.mozilla.javascript.lc;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -18,6 +18,25 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
+import org.mozilla.javascript.Callable;
+import org.mozilla.javascript.Context;
+import org.mozilla.javascript.ES6Iterator;
+import org.mozilla.javascript.EvaluatorException;
+import org.mozilla.javascript.Function;
+import org.mozilla.javascript.Kit;
+import org.mozilla.javascript.NativeArray;
+import org.mozilla.javascript.NativeDate;
+import org.mozilla.javascript.NativeFunction;
+import org.mozilla.javascript.NativeObject;
+import org.mozilla.javascript.ScriptRuntime;
+import org.mozilla.javascript.Scriptable;
+import org.mozilla.javascript.ScriptableObject;
+import org.mozilla.javascript.Symbol;
+import org.mozilla.javascript.SymbolKey;
+import org.mozilla.javascript.SymbolScriptable;
+import org.mozilla.javascript.TopLevel;
+import org.mozilla.javascript.Undefined;
+import org.mozilla.javascript.Wrapper;
 
 /**
  * This class reflects non-Array Java objects into the JavaScript environment. It reflect fields
@@ -35,7 +54,7 @@ public class NativeJavaObject implements Scriptable, SymbolScriptable, Wrapper, 
 
     private static final long serialVersionUID = -6948590651130498591L;
 
-    static void init(ScriptableObject scope, boolean sealed) {
+    public static void init(ScriptableObject scope, boolean sealed) {
         JavaIterableIterator.init(scope, sealed);
     }
 
@@ -185,16 +204,17 @@ public class NativeJavaObject implements Scriptable, SymbolScriptable, Wrapper, 
         return members.getIds(false);
     }
 
-    /**
-     * @deprecated Use {@link Context#getWrapFactory()} together with calling {@link
-     *     WrapFactory#wrap(Context, Scriptable, Object, Class)}
-     */
-    @Deprecated
-    public static Object wrap(Scriptable scope, Object obj, Class<?> staticType) {
-
-        Context cx = Context.getContext();
-        return cx.getWrapFactory().wrap(cx, scope, obj, staticType);
-    }
+    // TODO
+    //    /**
+    //     * @deprecated Use {@link Context#getWrapFactory()} together with calling {@link
+    //     *     WrapFactory#wrap(Context, Scriptable, Object, Class)}
+    //     */
+    //    @Deprecated
+    //    public static Object wrap(Scriptable scope, Object obj, Class<?> staticType) {
+    //
+    //        Context cx = Context.getContext();
+    //        return cx.getWrapFactory().wrap(cx, scope, obj, staticType);
+    //    }
 
     @Override
     public Object unwrap() {
@@ -483,7 +503,7 @@ public class NativeJavaObject implements Scriptable, SymbolScriptable, Wrapper, 
     }
 
     /** Type-munging for field setting and method invocation. Conforms to LC3 specification */
-    static Object coerceTypeImpl(Class<?> type, Object value) {
+    public static Object coerceTypeImpl(Class<?> type, Object value) {
         if (value != null && value.getClass() == type) {
             return value;
         }
@@ -960,7 +980,7 @@ public class NativeJavaObject implements Scriptable, SymbolScriptable, Wrapper, 
     protected transient Object javaObject;
 
     protected transient Class<?> staticType;
-    protected transient JavaMembers members;
+    public transient JavaMembers members;
     private transient Map<String, FieldAndMethods> fieldAndMethods;
     protected transient boolean isAdapter;
 

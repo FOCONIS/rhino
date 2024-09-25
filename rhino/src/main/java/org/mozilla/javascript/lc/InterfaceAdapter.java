@@ -4,11 +4,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.javascript;
+package org.mozilla.javascript.lc;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.HashSet;
+import org.mozilla.javascript.Callable;
+import org.mozilla.javascript.ClassCache;
+import org.mozilla.javascript.Context;
+import org.mozilla.javascript.ContextFactory;
+import org.mozilla.javascript.ScriptRuntime;
+import org.mozilla.javascript.Scriptable;
+import org.mozilla.javascript.ScriptableObject;
+import org.mozilla.javascript.WrapFactory;
 
 /**
  * Adapter to use JS function as implementation of Java interfaces with single method or multiple
@@ -72,7 +80,7 @@ public class InterfaceAdapter {
             adapter = new InterfaceAdapter(cf, cl);
             cache.cacheInterfaceAdapter(cl, adapter);
         }
-        return VMBridge.instance.newInterfaceProxy(
+        return LCBridge.instance.newInterfaceProxy(
                 adapter.proxyHelper, cf, adapter, object, topScope);
     }
 
@@ -95,7 +103,7 @@ public class InterfaceAdapter {
     }
 
     private InterfaceAdapter(ContextFactory cf, Class<?> cl) {
-        this.proxyHelper = VMBridge.instance.getInterfaceProxyHelper(cf, new Class[] {cl});
+        this.proxyHelper = LCBridge.instance.getInterfaceProxyHelper(cf, new Class[] {cl});
     }
 
     public Object invoke(

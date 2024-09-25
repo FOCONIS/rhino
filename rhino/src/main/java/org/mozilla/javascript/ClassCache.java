@@ -22,7 +22,7 @@ public class ClassCache implements Serializable {
     private static final long serialVersionUID = -8866246036237312215L;
     private static final Object AKEY = "ClassCache";
     private volatile boolean cachingIsEnabled = true;
-    private transient Map<CacheKey, JavaMembers> classTable;
+    private transient Map<CacheKey, Object> classTable;
     private transient Map<JavaAdapter.JavaAdapterSignature, Class<?>> classAdapterCache;
     private transient Map<Class<?>, Object> interfaceAdapterCache;
     private int generatedClassSerial;
@@ -32,7 +32,7 @@ public class ClassCache implements Serializable {
      * CacheKey is a combination of class and securityContext. This is required when classes are
      * loaded from different security contexts
      */
-    static class CacheKey {
+    public static class CacheKey {
         final Class<?> cls;
         final Object sec;
 
@@ -135,7 +135,7 @@ public class ClassCache implements Serializable {
     /**
      * @return a map from classes to associated JavaMembers objects
      */
-    Map<CacheKey, JavaMembers> getClassCacheMap() {
+    public Map<CacheKey, Object> getClassCacheMap() {
         if (classTable == null) {
             // Use 1 as concurrency level here and for other concurrent hash maps
             // as we don't expect high levels of sustained concurrent writes.
@@ -144,7 +144,7 @@ public class ClassCache implements Serializable {
         return classTable;
     }
 
-    Map<JavaAdapter.JavaAdapterSignature, Class<?>> getInterfaceAdapterCacheMap() {
+    public Map<JavaAdapter.JavaAdapterSignature, Class<?>> getInterfaceAdapterCacheMap() {
         if (classAdapterCache == null) {
             classAdapterCache = new ConcurrentHashMap<>(16, 0.75f, 1);
         }
@@ -177,11 +177,11 @@ public class ClassCache implements Serializable {
         return ++generatedClassSerial;
     }
 
-    Object getInterfaceAdapter(Class<?> cl) {
+    public Object getInterfaceAdapter(Class<?> cl) {
         return interfaceAdapterCache == null ? null : interfaceAdapterCache.get(cl);
     }
 
-    synchronized void cacheInterfaceAdapter(Class<?> cl, Object iadapter) {
+    public synchronized void cacheInterfaceAdapter(Class<?> cl, Object iadapter) {
         if (cachingIsEnabled) {
             if (interfaceAdapterCache == null) {
                 interfaceAdapterCache = new ConcurrentHashMap<>(16, 0.75f, 1);
@@ -190,7 +190,7 @@ public class ClassCache implements Serializable {
         }
     }
 
-    Scriptable getAssociatedScope() {
+    public Scriptable getAssociatedScope() {
         return associatedScope;
     }
 }

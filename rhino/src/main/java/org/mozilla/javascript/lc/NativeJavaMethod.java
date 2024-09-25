@@ -4,13 +4,24 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.javascript;
+package org.mozilla.javascript.lc;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.concurrent.CopyOnWriteArrayList;
+import org.mozilla.javascript.BaseFunction;
+import org.mozilla.javascript.Context;
+import org.mozilla.javascript.DecompilerFlag;
+import org.mozilla.javascript.Function;
+import org.mozilla.javascript.Kit;
+import org.mozilla.javascript.MemberBox;
+import org.mozilla.javascript.NativeArray;
+import org.mozilla.javascript.ScriptRuntime;
+import org.mozilla.javascript.Scriptable;
+import org.mozilla.javascript.Undefined;
+import org.mozilla.javascript.Wrapper;
 
 /**
  * This class reflects Java methods into the JavaScript environment and handles overloading of
@@ -49,7 +60,7 @@ public class NativeJavaMethod extends BaseFunction {
         return functionName;
     }
 
-    static String scriptSignature(Object[] values) {
+    public static String scriptSignature(Object[] values) {
         StringBuilder sig = new StringBuilder();
         for (int i = 0; i != values.length; ++i) {
             Object value = values[i];
@@ -87,7 +98,7 @@ public class NativeJavaMethod extends BaseFunction {
     }
 
     @Override
-    String decompile(int indent, EnumSet<DecompilerFlag> flags) {
+    protected String decompile(int indent, EnumSet<DecompilerFlag> flags) {
         StringBuilder sb = new StringBuilder();
         boolean justbody = flags.contains(DecompilerFlag.ONLY_BODY);
         if (!justbody) {
@@ -239,7 +250,7 @@ public class NativeJavaMethod extends BaseFunction {
         return wrapped;
     }
 
-    int findCachedFunction(Context cx, Object[] args) {
+    public int findCachedFunction(Context cx, Object[] args) {
         if (methods.length > 1) {
             for (ResolvedOverload ovl : overloadCache) {
                 if (ovl.matches(args)) {
@@ -424,7 +435,7 @@ public class NativeJavaMethod extends BaseFunction {
                 bestFitIndex = extraBestFits[j];
             }
             buf.append("\n    ");
-            buf.append(methodsOrCtors[bestFitIndex].toJavaDeclaration());
+            buf.append(JavaMembers.toJavaDeclaration(methodsOrCtors[bestFitIndex]));
         }
 
         MemberBox firstFitMember = methodsOrCtors[firstBestFit];
@@ -521,7 +532,7 @@ public class NativeJavaMethod extends BaseFunction {
         }
     }
 
-    MemberBox[] methods;
+    public MemberBox[] methods;
     private String functionName;
     private final transient CopyOnWriteArrayList<ResolvedOverload> overloadCache =
             new CopyOnWriteArrayList<>();

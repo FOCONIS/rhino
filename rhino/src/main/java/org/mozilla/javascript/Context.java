@@ -33,6 +33,12 @@ import org.mozilla.javascript.ast.AstRoot;
 import org.mozilla.javascript.ast.ScriptNode;
 import org.mozilla.javascript.debug.DebuggableScript;
 import org.mozilla.javascript.debug.Debugger;
+// CHECKME Can we remove the ClassShutter from the context and move it somehow to the
+// LiveContextBridge?
+import org.mozilla.javascript.lc.ClassShutter;
+// CHECKME: We access NativeJavaObject.coerceTypeImpl here. Can we provide much simpler code, if no
+// LC is used?
+import org.mozilla.javascript.lc.NativeJavaObject;
 import org.mozilla.javascript.xml.XMLLib;
 
 /**
@@ -949,7 +955,7 @@ public class Context implements Closeable {
         throw new EvaluatorException(message, sourceName, lineno, lineSource, lineOffset);
     }
 
-    static EvaluatorException reportRuntimeErrorById(String messageId, Object... args) {
+    public static EvaluatorException reportRuntimeErrorById(String messageId, Object... args) {
         String msg = ScriptRuntime.getMessageById(messageId, args);
         return reportRuntimeError(msg);
     }
@@ -2057,7 +2063,7 @@ public class Context implements Closeable {
         hasClassShutter = true;
     }
 
-    final synchronized ClassShutter getClassShutter() {
+    public final synchronized ClassShutter getClassShutter() {
         return classShutter;
     }
 
@@ -2418,7 +2424,7 @@ public class Context implements Closeable {
     /* ******** end of API ********* */
 
     /** Internal method that reports an error for missing calls to enter(). */
-    static Context getContext() {
+    public static Context getContext() {
         Context cx = getCurrentContext();
         if (cx == null) {
             throw new RuntimeException("No Context associated with current Thread");

@@ -1915,7 +1915,7 @@ public abstract class ScriptableObject
         return (SymbolScriptable) arg;
     }
 
-    protected static ScriptableObject ensureScriptableObject(Object arg) {
+    public static ScriptableObject ensureScriptableObject(Object arg) {
         if (arg instanceof ScriptableObject) {
             return (ScriptableObject) arg;
         }
