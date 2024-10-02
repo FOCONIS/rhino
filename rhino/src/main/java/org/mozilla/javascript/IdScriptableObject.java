@@ -104,15 +104,13 @@ public abstract class IdScriptableObject extends ScriptableObject implements IdF
                 value = UniqueTag.NULL_VALUE;
             }
             int index = (id - 1) * SLOT_SPAN;
-            synchronized (this) {
-                Object value2 = array[index];
-                if (value2 == null) {
-                    array[index] = value;
-                    array[index + NAME_SLOT] = name;
-                    attributeArray[id - 1] = (short) attributes;
-                } else {
-                    if (!name.equals(array[index + NAME_SLOT])) throw new IllegalStateException();
-                }
+            Object value2 = array[index];
+            if (value2 == null) {
+                array[index] = value;
+                array[index + NAME_SLOT] = name;
+                attributeArray[id - 1] = (short) attributes;
+            } else {
+                if (!name.equals(array[index + NAME_SLOT])) throw new IllegalStateException();
             }
         }
 
@@ -176,9 +174,7 @@ public abstract class IdScriptableObject extends ScriptableObject implements IdF
                         value = UniqueTag.NULL_VALUE;
                     }
                     int valueSlot = (id - 1) * SLOT_SPAN;
-                    synchronized (this) {
-                        valueArray[valueSlot] = value;
-                    }
+                    valueArray[valueSlot] = value;
                 } else {
                     int nameSlot = (id - 1) * SLOT_SPAN + NAME_SLOT;
                     Object name = valueArray[nameSlot];
@@ -207,10 +203,8 @@ public abstract class IdScriptableObject extends ScriptableObject implements IdF
                 }
             } else {
                 int valueSlot = (id - 1) * SLOT_SPAN;
-                synchronized (this) {
-                    valueArray[valueSlot] = NOT_FOUND;
-                    attributeArray[id - 1] = EMPTY;
-                }
+                valueArray[valueSlot] = NOT_FOUND;
+                attributeArray[id - 1] = EMPTY;
             }
         }
 
@@ -222,9 +216,7 @@ public abstract class IdScriptableObject extends ScriptableObject implements IdF
         final void setAttributes(int id, int attributes) {
             ScriptableObject.checkValidAttributes(attributes);
             ensureId(id);
-            synchronized (this) {
-                attributeArray[id - 1] = (short) attributes;
-            }
+            attributeArray[id - 1] = (short) attributes;
         }
 
         final Object[] getNames(boolean getAll, boolean getSymbols, Object[] extraEntries) {
@@ -270,14 +262,12 @@ public abstract class IdScriptableObject extends ScriptableObject implements IdF
 
         private Object ensureId(int id) {
             Object[] array = valueArray;
-            synchronized (this) {
+            if (array == null) {
+                array = valueArray;
                 if (array == null) {
-                    array = valueArray;
-                    if (array == null) {
-                        array = new Object[maxId * SLOT_SPAN];
-                        valueArray = array;
-                        attributeArray = new short[maxId];
-                    }
+                    array = new Object[maxId * SLOT_SPAN];
+                    valueArray = array;
+                    attributeArray = new short[maxId];
                 }
             }
             int valueSlot = (id - 1) * SLOT_SPAN;
@@ -736,10 +726,8 @@ public abstract class IdScriptableObject extends ScriptableObject implements IdF
 
     public final void activatePrototypeMap(int maxPrototypeId) {
         PrototypeValues values = new PrototypeValues(this, maxPrototypeId);
-        synchronized (this) {
-            if (prototypeValues != null) throw new IllegalStateException();
-            prototypeValues = values;
-        }
+        if (prototypeValues != null) throw new IllegalStateException();
+        prototypeValues = values;
     }
 
     public final IdFunctionObject initPrototypeMethod(Object tag, int id, String name, int arity) {

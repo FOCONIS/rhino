@@ -73,22 +73,18 @@ final class Arguments extends IdScriptableObject {
         if (sharedWithActivation(index)) {
             putIntoActivation(index, value);
         }
-        synchronized (this) {
-            if (args == activation.originalArgs) {
-                args = args.clone();
-            }
-            args[index] = value;
+        if (args == activation.originalArgs) {
+            args = args.clone();
         }
+        args[index] = value;
     }
 
     private void removeArg(int index) {
-        synchronized (this) {
-            if (args[index] != NOT_FOUND) {
-                if (args == activation.originalArgs) {
-                    args = args.clone();
-                }
-                args[index] = NOT_FOUND;
+        if (args[index] != NOT_FOUND) {
+            if (args == activation.originalArgs) {
+                args = args.clone();
             }
+            args[index] = NOT_FOUND;
         }
     }
 
