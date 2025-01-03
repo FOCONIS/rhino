@@ -105,7 +105,7 @@ public class AmbiguousMethodTest {
     }
 
     private void testIt(final String script, final String expected) {
-        Utils.runWithAllOptimizationLevels(
+        Utils.runWithAllModes(
                 cx -> {
                     final Global scope = new Global();
                     scope.init(cx);

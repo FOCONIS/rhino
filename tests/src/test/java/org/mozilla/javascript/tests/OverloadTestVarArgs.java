@@ -60,7 +60,7 @@ public class OverloadTestVarArgs {
     }
 
     private void assertEvaluates(final Object expected, final String source) {
-        Utils.runWithAllOptimizationLevels(
+        Utils.runWithAllModes(
                 cx -> {
                     final Scriptable scope = cx.initStandardObjects();
                     scope.put("self", scope, this);

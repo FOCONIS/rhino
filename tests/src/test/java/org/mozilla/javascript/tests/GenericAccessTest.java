@@ -306,7 +306,7 @@ public class GenericAccessTest extends TestCase {
     }
 
     private void testIt(String script, String expected) {
-        Utils.runWithAllOptimizationLevels(
+        Utils.runWithAllModes(
                 getContextFactory(),
                 cx -> {
                     final ScriptableObject scope = cx.initStandardObjects();
@@ -323,7 +323,7 @@ public class GenericAccessTest extends TestCase {
 
     @Test
     public void testSerDeser() {
-        Utils.runWithAllOptimizationLevels(
+        Utils.runWithAllModes(
                 getContextFactory(),
                 cx -> {
 
