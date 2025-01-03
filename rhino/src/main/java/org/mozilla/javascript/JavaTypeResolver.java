@@ -43,6 +43,7 @@ public class JavaTypeResolver {
 
         return narrowType(staticType, dynamicType);
     }
+
     /** resolves multiple types (e.g. method arguments) */
     public Class<?>[] resolve(Type[] types) {
         Class<?>[] ret = new Class<?>[types.length];

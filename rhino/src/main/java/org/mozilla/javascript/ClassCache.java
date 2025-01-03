@@ -159,6 +159,7 @@ public class ClassCache implements Serializable {
         }
         return typeCache;
     }
+
     /**
      * @deprecated The method always returns false.
      * @see #setInvokerOptimizationEnabled(boolean enabled)

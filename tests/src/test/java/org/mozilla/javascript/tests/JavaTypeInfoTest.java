@@ -40,6 +40,7 @@ public class JavaTypeInfoTest {
     }
 
     List<String> list1;
+
     /** Tests, if we can read type arguments from a normal List&lt;String&gt;. */
     @Test
     public void testList1() throws Exception {
@@ -49,6 +50,7 @@ public class JavaTypeInfoTest {
     }
 
     List<List<String>> list2;
+
     /** Tests, if we can read special generic type arguments like List&lt;List&lt;String&gt;&gt;. */
     @Test
     public void testList2() throws Exception {
@@ -71,6 +73,7 @@ public class JavaTypeInfoTest {
     }
 
     TestList4 list4;
+
     /** Tests, if we can read type argument, if class inherits from a generic class. */
     @Test
     public void testList4() throws Exception {
@@ -86,6 +89,7 @@ public class JavaTypeInfoTest {
     }
 
     TestList5 list5;
+
     /** Tests, if we can read type arguments, if inheritance chain introduces new type arguments. */
     @Test
     public void testList5() throws Exception {
@@ -98,6 +102,7 @@ public class JavaTypeInfoTest {
     }
 
     TestList6<?> list6;
+
     /** Tests, if we can read type arguments, if wildcards are involved. */
     @Test
     public void testList6() throws Exception {
@@ -105,6 +110,7 @@ public class JavaTypeInfoTest {
     }
 
     List<?> list7;
+
     /** Tests, if we can read type arguments, if wildcards are involved. */
     @Test
     public void testList7() throws Exception {
@@ -113,6 +119,7 @@ public class JavaTypeInfoTest {
     }
 
     List list8;
+
     /** Tests, if we can read type arguments, if raw types are involved. */
     @Test
     public void testList8() throws Exception {
@@ -121,6 +128,7 @@ public class JavaTypeInfoTest {
     }
 
     List<? extends Number> list9;
+
     /** Tests, if we can read wildcard type arguments with lowerBound. */
     @Test
     public void testList9() throws Exception {
@@ -129,6 +137,7 @@ public class JavaTypeInfoTest {
     }
 
     List<? super Number> list10;
+
     /** Tests, if we can read wildcard type arguments with upperBound. */
     @Test
     public void testList10() throws Exception {
@@ -137,6 +146,7 @@ public class JavaTypeInfoTest {
     }
 
     List<Number[]> list11;
+
     /** Tests, if we can read array types. */
     @Test
     public void testList11() throws Exception {
@@ -144,6 +154,7 @@ public class JavaTypeInfoTest {
     }
 
     List list12 = new ArrayList<String>() {};
+
     /** Tests, if we take the "best" type, if there are different possibilities. */
     @Test
     public void testList12() throws Exception {
@@ -151,6 +162,7 @@ public class JavaTypeInfoTest {
     }
 
     Object list13 = new ArrayList<String>() {};
+
     /** Tests, if we take the "best" type, if there are different possibilities. */
     @Test
     public void testList13() throws Exception {
@@ -158,6 +170,7 @@ public class JavaTypeInfoTest {
     }
 
     List<? extends Number> list14 = new ArrayList<Integer>() {};
+
     /** Tests, if we take the "best" type, if there are different possibilities. */
     @Test
     public void testList14() throws Exception {
@@ -165,6 +178,7 @@ public class JavaTypeInfoTest {
     }
 
     List<? super Integer> list15 = new ArrayList<Number>() {};
+
     /** Tests, if we take the "best" type, if there are different possibilities. */
     @Test
     public void testList15() throws Exception {
@@ -174,6 +188,7 @@ public class JavaTypeInfoTest {
     abstract static class TwoInterfaces implements Iterator<Integer>, Map<String, Double> {}
 
     TwoInterfaces twoInterfaces1;
+
     /** Tests, if we can read the type info of each interface. */
     @Test
     public void testTwoInterfaces1() throws Exception {
@@ -186,6 +201,7 @@ public class JavaTypeInfoTest {
     abstract static class TwoGenericInterfaces<A, B, C> implements Iterator<B>, Map<C, A> {}
 
     TwoGenericInterfaces<Double, Integer, String> twoInterfaces2;
+
     /** Tests, if we can read the type info of each generic interface. */
     @Test
     public void testTwoInterfaces2() throws Exception {
@@ -198,6 +214,7 @@ public class JavaTypeInfoTest {
     }
 
     TwoGenericInterfaces<? extends Number, Integer, String> twoInterfaces3;
+
     /** Tests, if we can read the type info of each generic interface. */
     @Test
     public void testTwoInterfaces3() throws Exception {
@@ -210,6 +227,7 @@ public class JavaTypeInfoTest {
     }
 
     TwoGenericInterfaces<? extends Number, ?, String> twoInterfaces4;
+
     /** Tests, if we can read the type info of each generic interface. */
     @Test
     public void testTwoInterfaces4() throws Exception {
