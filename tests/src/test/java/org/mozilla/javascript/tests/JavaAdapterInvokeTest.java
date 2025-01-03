@@ -49,7 +49,7 @@ public class JavaAdapterInvokeTest {
                         + "  m1: function(i) { return i + 1 },\n"
                         + "  m2: function() { return 7 }\n"
                         + "}\n"
-                        + "adapter = new Packages."
+                        + "var adapter = new Packages."
                         + AdapterClass.class.getName()
                         + "(impl)\n"
                         + "adapter.doIt(42)";
@@ -66,7 +66,7 @@ public class JavaAdapterInvokeTest {
                         + "Obj.prototype.m1 = function(i) { return i + 1 }\n"
                         + "Obj.prototype.m2 = function() { return 7 }\n"
                         + "var impl = new Obj()\n"
-                        + "adapter = new Packages."
+                        + "var adapter = new Packages."
                         + AdapterClass.class.getName()
                         + "(impl)\n"
                         + "adapter.doIt(42)";
@@ -83,7 +83,7 @@ public class JavaAdapterInvokeTest {
                         + "Obj.prototype.m1 = function(i) { return i + this.myObj.one }\n"
                         + "Obj.prototype.m2 = function() { return 7 }\n"
                         + "var impl = new Obj()\n"
-                        + "adapter = new Packages."
+                        + "var adapter = new Packages."
                         + AdapterClass.class.getName()
                         + "(impl)\n"
                         + "adapter.doIt(42)";
@@ -102,7 +102,7 @@ public class JavaAdapterInvokeTest {
                         + "function Adapter(adapter) { this.adapter = adapter }\n"
                         + "Adapter.prototype.doIt = function(i) { return this.adapter.m1(i) + this.adapter.m2() }\n"
                         + "var impl = new Obj()\n"
-                        + "adapter = new Adapter(impl)\n"
+                        + "var adapter = new Adapter(impl)\n"
                         + "adapter.doIt(42)";
 
         Number result = (Number) cx.evaluateString(topScope, testCode, "", 1, null);
