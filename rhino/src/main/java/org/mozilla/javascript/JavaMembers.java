@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import org.mozilla.javascript.nat.type.TypeInfo;
+import org.mozilla.javascript.nat.type.TypeInfoFactory;
 
 /**
  * @author Mike Shaver
@@ -436,8 +437,6 @@ class JavaMembers {
         // We reflect methods first, because we want overloaded field/method
         // names to be allocated to the NativeJavaMethod before the field
         // gets in the way.
-        var typeFactory = ClassCache.get(scope).getTypeFactory();
-
         Method[] methods = discoverAccessibleMethods(cl, includeProtected, includePrivate);
         for (Method method : methods) {
             int mods = method.getModifiers();
@@ -465,6 +464,7 @@ class JavaMembers {
 
         // replace Method instances by wrapped NativeJavaMethod objects
         // first in staticMembers and then in members
+        TypeInfoFactory typeFactory = TypeInfoFactory.get(scope);
         for (int tableCursor = 0; tableCursor != 2; ++tableCursor) {
             boolean isStatic = (tableCursor == 0);
             Map<String, Object> ht = isStatic ? staticMembers : members;

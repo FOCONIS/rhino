@@ -1,5 +1,6 @@
 package org.mozilla.javascript.nat.type.impl.factory;
 
+import java.io.Serializable;
 import java.lang.reflect.TypeVariable;
 import org.mozilla.javascript.nat.type.TypeInfo;
 import org.mozilla.javascript.nat.type.impl.BasicClassTypeInfo;
@@ -8,9 +9,12 @@ import org.mozilla.javascript.nat.type.impl.InterfaceTypeInfo;
 import org.mozilla.javascript.nat.type.impl.VariableTypeInfoImpl;
 
 /**
+ * Factory without cache support.
+ *
  * @author ZZZank
  */
-public final class NoCacheFactory implements FactoryBase {
+public final class NoCacheFactory implements FactoryBase, Serializable {
+    private static final long serialVersionUID = 1L;
 
     @Override
     public TypeInfo create(Class<?> clazz) {

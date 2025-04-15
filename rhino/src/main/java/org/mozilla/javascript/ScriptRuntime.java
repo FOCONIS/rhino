@@ -22,6 +22,7 @@ import java.util.ServiceLoader;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import org.mozilla.javascript.ast.FunctionNode;
+import org.mozilla.javascript.nat.type.impl.factory.ConcurrentFactory;
 import org.mozilla.javascript.typedarrays.NativeArrayBuffer;
 import org.mozilla.javascript.typedarrays.NativeDataView;
 import org.mozilla.javascript.typedarrays.NativeFloat32Array;
@@ -163,7 +164,8 @@ public class ScriptRuntime {
         }
 
         scope.associateValue(LIBRARY_SCOPE_KEY, scope);
-        new ClassCache(cx.getFactory().getTypeFactoryProvider().apply(cx)).associate(scope);
+        new ClassCache().associate(scope);
+        new ConcurrentFactory().associate(scope);
 
         BaseFunction.init(cx, scope, sealed);
         NativeObject.init(scope, sealed);

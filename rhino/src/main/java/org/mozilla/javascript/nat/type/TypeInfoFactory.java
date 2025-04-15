@@ -19,8 +19,8 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
-import org.mozilla.javascript.ClassCache;
 import org.mozilla.javascript.Scriptable;
+import org.mozilla.javascript.ScriptableObject;
 import org.mozilla.javascript.nat.type.impl.factory.NoCacheFactory;
 import org.mozilla.javascript.nat.type.impl.factory.WeakReferenceFactory;
 
@@ -41,8 +41,7 @@ public interface TypeInfoFactory {
      * types from being unloaded
      *
      * <p>For actions with scope available, the TypeInfoFactory can be obtained via {@link
-     * ClassCache#getTypeFactory()}. The {@link ClassCache} itself is attached to provided scope
-     * (see {@link ClassCache#get(Scriptable)})
+     * TypeInfoFactory#get(Scriptable)}.
      */
     TypeInfoFactory GLOBAL = new WeakReferenceFactory();
 
@@ -55,6 +54,8 @@ public interface TypeInfoFactory {
     TypeInfoFactory NO_CACHE = new NoCacheFactory();
 
     TypeInfo[] EMPTY_ARRAY = new TypeInfo[0];
+
+    Object AKEY = "TypeInfoFactory";
 
     /// creating types
 
@@ -234,5 +235,22 @@ public interface TypeInfoFactory {
             return TypeInfo.BIG_INT;
         }
         return null;
+    }
+
+    default boolean associate(ScriptableObject topScope) {
+        if (topScope.getParentScope() != null) {
+            // Can only associate cache with top level scope
+            throw new IllegalArgumentException();
+        }
+        return this == topScope.associateValue(AKEY, this);
+    }
+
+    static TypeInfoFactory get(Scriptable scope) {
+        TypeInfoFactory cache = (TypeInfoFactory) ScriptableObject.getTopScopeValue(scope, AKEY);
+        if (cache == null) {
+            throw new RuntimeException("Can't find top level scope for " + "TypeInfoFactory.get");
+            // return GLOBAL
+        }
+        return cache;
     }
 }
