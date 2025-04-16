@@ -43,23 +43,23 @@ public class NativeJavaObject implements Scriptable, SymbolScriptable, Wrapper, 
 
     public NativeJavaObject() {}
 
-    public NativeJavaObject(Scriptable scope, Object javaObject, Class<?> staticType) {
+    public NativeJavaObject(Scriptable scope, Object javaObject, TypeInfo staticType) {
         this(scope, javaObject, staticType, false);
     }
 
     public NativeJavaObject(
-            Scriptable scope, Object javaObject, Class<?> staticType, boolean isAdapter) {
+            Scriptable scope, Object javaObject, TypeInfo staticType, boolean isAdapter) {
         this.parent = scope;
         this.javaObject = javaObject;
         this.staticType = staticType;
         this.isAdapter = isAdapter;
-        initMembers();
+        initMembers(scope);
     }
 
-    protected void initMembers() {
-        Class<?> dynamicType;
+    protected void initMembers(Scriptable scope) {
+        TypeInfo dynamicType;
         if (javaObject != null) {
-            dynamicType = javaObject.getClass();
+            dynamicType = TypeInfoFactory.get(scope).create(javaObject.getClass());
         } else {
             dynamicType = staticType;
         }
@@ -192,7 +192,7 @@ public class NativeJavaObject implements Scriptable, SymbolScriptable, Wrapper, 
      *     WrapFactory#wrap(Context, Scriptable, Object, Class)}
      */
     @Deprecated
-    public static Object wrap(Scriptable scope, Object obj, Class<?> staticType) {
+    public static Object wrap(Scriptable scope, Object obj, TypeInfo staticType) {
 
         Context cx = Context.getContext();
         return cx.getWrapFactory().wrap(cx, scope, obj, staticType);
@@ -882,7 +882,7 @@ public class NativeJavaObject implements Scriptable, SymbolScriptable, Wrapper, 
         }
 
         if (staticType != null) {
-            out.writeObject(staticType.getName());
+            out.writeObject(staticType.toString()); // TODO
         } else {
             out.writeObject(null);
         }
@@ -906,12 +906,12 @@ public class NativeJavaObject implements Scriptable, SymbolScriptable, Wrapper, 
 
         String className = (String) in.readObject();
         if (className != null) {
-            staticType = Class.forName(className);
+            staticType = null; // Class.forName(className); TODO
         } else {
             staticType = null;
         }
 
-        initMembers();
+        initMembers(null); // TODO!
     }
 
     private static Callable symbol_iterator =
@@ -960,7 +960,12 @@ public class NativeJavaObject implements Scriptable, SymbolScriptable, Wrapper, 
                 return Undefined.instance;
             }
             Object obj = iterator.next();
-            return cx.getWrapFactory().wrap(cx, this, obj, obj == null ? null : obj.getClass());
+            return cx.getWrapFactory()
+                    .wrap(
+                            cx,
+                            this,
+                            obj,
+                            obj == null ? null : TypeInfoFactory.GLOBAL.create(obj.getClass()));
         }
 
         @Override
@@ -979,7 +984,7 @@ public class NativeJavaObject implements Scriptable, SymbolScriptable, Wrapper, 
 
     protected transient Object javaObject;
 
-    protected transient Class<?> staticType;
+    protected transient TypeInfo staticType;
     protected transient JavaMembers members;
     private transient Map<String, FieldAndMethods> fieldAndMethods;
     protected transient boolean isAdapter;

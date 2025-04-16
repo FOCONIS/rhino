@@ -11,6 +11,7 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.concurrent.CopyOnWriteArrayList;
+import org.mozilla.javascript.nat.type.TypeInfo;
 import org.mozilla.javascript.nat.type.TypeInfoFactory;
 
 /**
@@ -213,7 +214,7 @@ public class NativeJavaMethod extends BaseFunction {
         }
 
         Object retval = meth.invoke(javaObject, args);
-        Class<?> staticType = meth.method().getReturnType();
+        TypeInfo staticType = meth.getReturnType();
 
         if (debug) {
             Class<?> actualType = (retval == null) ? null : retval.getClass();
@@ -236,7 +237,7 @@ public class NativeJavaMethod extends BaseFunction {
             System.err.println(" ----- Wrapped as " + wrapped + " class = " + actualType);
         }
 
-        if (wrapped == null && staticType == Void.TYPE) {
+        if (wrapped == null && staticType.isVoid()) {
             wrapped = Undefined.instance;
         }
         return wrapped;

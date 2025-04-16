@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import org.mozilla.javascript.nat.type.TypeInfo;
+import org.mozilla.javascript.nat.type.TypeInfoFactory;
 
 /**
  * <code>NativeJavaMap</code> is a wrapper for java objects implementing <code>java.util.Map
@@ -24,6 +26,8 @@ import java.util.Map;
 public class NativeJavaMap extends NativeJavaObject {
 
     private static final long serialVersionUID = -3786257752907047381L;
+    private final TypeInfo keyType;
+    private final TypeInfo valueType;
 
     private Map<Object, Object> map;
 
@@ -32,10 +36,12 @@ public class NativeJavaMap extends NativeJavaObject {
     }
 
     @SuppressWarnings("unchecked")
-    public NativeJavaMap(Scriptable scope, Object map) {
-        super(scope, map, map.getClass());
+    public NativeJavaMap(Scriptable scope, Object map, TypeInfo staticType) {
+        super(scope, map, TypeInfoFactory.get(scope).create(map.getClass()));
         assert map instanceof Map;
         this.map = (Map<Object, Object>) map;
+        this.keyType = staticType.resolveBound(Map.class, 0);
+        this.valueType = staticType.resolveBound(Map.class, 1);
     }
 
     @Override
@@ -79,7 +85,14 @@ public class NativeJavaMap extends NativeJavaObject {
         if (cx != null && cx.hasFeature(Context.FEATURE_ENABLE_JAVA_MAP_ACCESS)) {
             if (map.containsKey(name)) {
                 Object obj = map.get(name);
-                return cx.getWrapFactory().wrap(cx, this, obj, obj == null ? null : obj.getClass());
+                return cx.getWrapFactory()
+                        .wrap(
+                                cx,
+                                this,
+                                obj,
+                                obj == null
+                                        ? null
+                                        : TypeInfoFactory.get(start).create(obj.getClass()));
             }
         }
         return super.get(name, start);
@@ -91,7 +104,14 @@ public class NativeJavaMap extends NativeJavaObject {
         if (cx != null && cx.hasFeature(Context.FEATURE_ENABLE_JAVA_MAP_ACCESS)) {
             if (map.containsKey(Integer.valueOf(index))) {
                 Object obj = map.get(Integer.valueOf(index));
-                return cx.getWrapFactory().wrap(cx, this, obj, obj == null ? null : obj.getClass());
+                return cx.getWrapFactory()
+                        .wrap(
+                                cx,
+                                this,
+                                obj,
+                                obj == null
+                                        ? null
+                                        : TypeInfoFactory.get(start).create(obj.getClass()));
             }
         }
         return super.get(index, start);
@@ -109,7 +129,11 @@ public class NativeJavaMap extends NativeJavaObject {
     public void put(String name, Scriptable start, Object value) {
         Context cx = Context.getCurrentContext();
         if (cx != null && cx.hasFeature(Context.FEATURE_ENABLE_JAVA_MAP_ACCESS)) {
-            map.put(name, Context.jsToJava(value, Object.class));
+            if (keyType.isAssignableFrom(TypeInfo.STRING)) {
+                map.put(name, Context.jsToJava(value, valueType));
+            } else {
+                reportConversionError(name, keyType);
+            }
         } else {
             super.put(name, start, value);
         }
@@ -119,7 +143,7 @@ public class NativeJavaMap extends NativeJavaObject {
     public void put(int index, Scriptable start, Object value) {
         Context cx = Context.getContext();
         if (cx != null && cx.hasFeature(Context.FEATURE_ENABLE_JAVA_MAP_ACCESS)) {
-            map.put(Integer.valueOf(index), Context.jsToJava(value, Object.class));
+            map.put(Integer.valueOf(index), Context.jsToJava(value, valueType));
         } else {
             super.put(index, start, value);
         }
@@ -197,8 +221,20 @@ public class NativeJavaMap extends NativeJavaObject {
             Object key = e.getKey();
             Object value = e.getValue();
             WrapFactory wrapFactory = cx.getWrapFactory();
-            key = wrapFactory.wrap(cx, this, key, key == null ? null : key.getClass());
-            value = wrapFactory.wrap(cx, this, value, value == null ? null : value.getClass());
+            key =
+                    wrapFactory.wrap(
+                            cx,
+                            this,
+                            key,
+                            key == null ? null : TypeInfoFactory.get(scope).create(key.getClass()));
+            value =
+                    wrapFactory.wrap(
+                            cx,
+                            this,
+                            value,
+                            value == null
+                                    ? null
+                                    : TypeInfoFactory.get(scope).create(value.getClass()));
 
             return cx.newArray(scope, new Object[] {key, value});
         }

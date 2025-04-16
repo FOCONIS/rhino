@@ -7,6 +7,8 @@ package org.mozilla.javascript;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.mozilla.javascript.nat.type.TypeInfo;
+import org.mozilla.javascript.nat.type.TypeInfoFactory;
 
 /**
  * <code>NativeJavaList</code> is a wrapper for java objects implementing <code>java.util.List
@@ -46,14 +48,16 @@ import java.util.List;
 public class NativeJavaList extends NativeJavaObject {
 
     private static final long serialVersionUID = 660285467829047519L;
+    private final TypeInfo valueType;
 
     private List<Object> list;
 
     @SuppressWarnings("unchecked")
-    public NativeJavaList(Scriptable scope, Object list) {
-        super(scope, list, list.getClass());
+    public NativeJavaList(Scriptable scope, Object list, TypeInfo staticType) {
+        super(scope, list, staticType);
         assert list instanceof List;
         this.list = (List<Object>) list;
+        this.valueType = staticType.resolveBound(List.class, 0);
     }
 
     @Override
@@ -106,7 +110,14 @@ public class NativeJavaList extends NativeJavaObject {
             Context cx = Context.getCurrentContext();
             Object obj = list.get(index);
             if (cx != null) {
-                return cx.getWrapFactory().wrap(cx, this, obj, obj == null ? null : obj.getClass());
+                return cx.getWrapFactory()
+                        .wrap(
+                                cx,
+                                this,
+                                obj,
+                                obj == null
+                                        ? null
+                                        : TypeInfoFactory.get(start).create(obj.getClass()));
             }
             return obj;
         }
@@ -124,7 +135,7 @@ public class NativeJavaList extends NativeJavaObject {
     @Override
     public void put(int index, Scriptable start, Object value) {
         if (index >= 0) {
-            Object javaValue = Context.jsToJava(value, Object.class);
+            Object javaValue = Context.jsToJava(value, valueType);
             if (index == list.size()) {
                 list.add(javaValue); // use "add" at the end of list.
             } else {

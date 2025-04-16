@@ -8,6 +8,8 @@ package org.mozilla.javascript;
 
 import java.lang.reflect.Array;
 import java.util.Objects;
+import org.mozilla.javascript.nat.type.TypeInfo;
+import org.mozilla.javascript.nat.type.TypeInfoFactory;
 
 /**
  * This class reflects Java arrays into the JavaScript environment.
@@ -35,14 +37,14 @@ public class NativeJavaArray extends NativeJavaObject implements SymbolScriptabl
     }
 
     public NativeJavaArray(Scriptable scope, Object array) {
-        super(scope, null, ScriptRuntime.ObjectClass);
+        super(scope, null, TypeInfo.OBJECT);
         Class<?> cl = array.getClass();
         if (!cl.isArray()) {
             throw new RuntimeException("Array expected");
         }
         this.array = array;
         this.length = Array.getLength(array);
-        this.cls = cl.getComponentType();
+        this.cls = TypeInfoFactory.get(scope).create(cl).getComponentType();
     }
 
     @Override
@@ -157,5 +159,5 @@ public class NativeJavaArray extends NativeJavaObject implements SymbolScriptabl
 
     Object array;
     int length;
-    Class<?> cls;
+    TypeInfo cls;
 }

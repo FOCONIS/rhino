@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+import org.mozilla.javascript.nat.type.TypeInfo;
 
 /**
  * Cache of generated classes and data structures to access Java runtime from JavaScript.
@@ -33,11 +34,11 @@ public class ClassCache implements Serializable {
      * loaded from different security contexts
      */
     static class CacheKey {
-        final Class<?> cls;
+        final TypeInfo cls;
         final Object sec;
 
         /** Constructor. */
-        public CacheKey(Class<?> cls, Object securityContext) {
+        public CacheKey(TypeInfo cls, Object securityContext) {
             this.cls = cls;
             this.sec = securityContext;
         }

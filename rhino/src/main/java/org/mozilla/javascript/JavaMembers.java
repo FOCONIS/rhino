@@ -98,17 +98,17 @@ class JavaMembers {
         }
         Context cx = Context.getContext();
         Object rval;
-        Class<?> type;
+        TypeInfo type;
         try {
             if (member instanceof BeanProperty) {
                 BeanProperty bp = (BeanProperty) member;
                 if (bp.getter == null) return Scriptable.NOT_FOUND;
                 rval = bp.getter.invoke(javaObject, ScriptRuntime.emptyArgs);
-                type = bp.getter.getReturnType().asClass();
+                type = bp.getter.getReturnType();
             } else {
                 Field field = (Field) member;
                 rval = field.get(isStatic ? null : javaObject);
-                type = field.getType();
+                type = TypeInfoFactory.get(scope).create(field.getGenericType());
             }
         } catch (Exception ex) {
             throw Context.throwAsScriptRuntimeEx(ex);
@@ -780,12 +780,12 @@ class JavaMembers {
     }
 
     static JavaMembers lookupClass(
-            Scriptable scope, Class<?> dynamicType, Class<?> staticType, boolean includeProtected) {
+            Scriptable scope, TypeInfo dynamicType, TypeInfo staticType, boolean includeProtected) {
         JavaMembers members;
         ClassCache cache = ClassCache.get(scope);
         Map<ClassCache.CacheKey, JavaMembers> ct = cache.getClassCacheMap();
 
-        Class<?> cl = dynamicType;
+        TypeInfo cl = dynamicType;
         Object secCtx = getSecurityContext();
         for (; ; ) {
             members = ct.get(new ClassCache.CacheKey(cl, secCtx));
@@ -798,7 +798,9 @@ class JavaMembers {
                 return members;
             }
             try {
-                members = createJavaMembers(cache.getAssociatedScope(), cl, includeProtected);
+                members =
+                        createJavaMembers(
+                                cache.getAssociatedScope(), cl.asClass(), includeProtected);
                 break;
             } catch (SecurityException e) {
                 // Reflection may fail for objects that are in a restricted
@@ -809,7 +811,8 @@ class JavaMembers {
                     cl = staticType;
                     staticType = null; // try staticType only once
                 } else {
-                    Class<?> parent = cl.getSuperclass();
+                    throw new UnsupportedOperationException(); // TODO
+                    /*Class<?> parent = cl.asClass().getSuperclass();
                     if (parent == null) {
                         if (cl.isInterface()) {
                             // last resort after failed staticType interface
@@ -818,7 +821,7 @@ class JavaMembers {
                             throw e;
                         }
                     }
-                    cl = parent;
+                    cl = parent;*/
                 }
             }
         }
@@ -900,10 +903,10 @@ class FieldAndMethods extends NativeJavaMethod {
     public Object getDefaultValue(Class<?> hint) {
         if (hint == ScriptRuntime.FunctionClass) return this;
         Object rval;
-        Class<?> type;
+        TypeInfo type;
         try {
             rval = field.get(javaObject);
-            type = field.getType();
+            type = TypeInfoFactory.get(this).create(field.getGenericType());
         } catch (IllegalAccessException accEx) {
             throw Context.reportRuntimeErrorById("msg.java.internal.private", field.getName());
         }

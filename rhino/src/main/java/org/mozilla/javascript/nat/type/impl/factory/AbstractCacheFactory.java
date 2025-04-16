@@ -15,7 +15,8 @@ import org.mozilla.javascript.nat.type.impl.VariableTypeInfoImpl;
 /**
  * Factory, that provides basic cache functionality.
  *
- * The cacheFactory itself is serializable, but does not serialize the cached values
+ * <p>The cacheFactory itself is serializable, but does not serialize the cached values
+ *
  * @author ZZZank
  */
 abstract class AbstractCacheFactory implements FactoryBase, Serializable {

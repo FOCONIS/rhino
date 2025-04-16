@@ -9,6 +9,8 @@ package org.mozilla.javascript;
 import java.lang.reflect.Array;
 import java.lang.reflect.Modifier;
 import java.util.Map;
+import org.mozilla.javascript.nat.type.TypeInfo;
+import org.mozilla.javascript.nat.type.TypeInfoFactory;
 
 /**
  * This class reflects Java classes into the JavaScript environment, mainly for constructors and
@@ -39,8 +41,8 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
     }
 
     @Override
-    protected void initMembers() {
-        Class<?> cl = (Class<?>) javaObject;
+    protected void initMembers(Scriptable scope) {
+        TypeInfo cl = TypeInfoFactory.get(scope).create((Class<?>) javaObject);
         members = JavaMembers.lookupClass(parent, cl, cl, isAdapter);
         staticFieldAndMethods = members.getFieldAndMethodsObjects(this, cl, true);
     }
@@ -77,7 +79,7 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
         WrapFactory wrapFactory = cx.getWrapFactory();
 
         if (javaClassPropertyName.equals(name)) {
-            return wrapFactory.wrap(cx, scope, javaObject, ScriptRuntime.ClassClass);
+            return wrapFactory.wrap(cx, scope, javaObject, TypeInfo.RAW_CLASS);
         }
 
         // experimental:  look for nested classes by appending $name to

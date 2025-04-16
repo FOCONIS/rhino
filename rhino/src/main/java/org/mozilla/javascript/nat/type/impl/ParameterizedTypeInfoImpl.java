@@ -79,4 +79,9 @@ public final class ParameterizedTypeInfoImpl extends TypeInfoBase implements Par
             param.collectComponentClass(collector);
         }
     }
+
+    @Override
+    public TypeInfo resolveBound(Class<?> iFace, int i) {
+        return param(i); // TODO
+    }
 }

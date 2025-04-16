@@ -22,6 +22,7 @@ import java.util.ServiceLoader;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import org.mozilla.javascript.ast.FunctionNode;
+import org.mozilla.javascript.nat.type.TypeInfoFactory;
 import org.mozilla.javascript.nat.type.impl.factory.ConcurrentFactory;
 import org.mozilla.javascript.typedarrays.NativeArrayBuffer;
 import org.mozilla.javascript.typedarrays.NativeDataView;
@@ -1268,7 +1269,9 @@ public class ScriptRuntime {
         }
 
         // Extension: Wrap as a LiveConnect object.
-        Object wrapped = cx.getWrapFactory().wrap(cx, scope, val, null);
+        Object wrapped =
+                cx.getWrapFactory()
+                        .wrap(cx, scope, val, TypeInfoFactory.get(scope).create(val.getClass()));
         if (wrapped instanceof Scriptable) return (Scriptable) wrapped;
         throw errorWithClassName("msg.invalid.type", val);
     }

@@ -281,7 +281,7 @@ public interface TypeInfo {
      * @see Class#isAssignableFrom(Class)
      */
     default boolean isAssignableFrom(TypeInfo another) {
-        return asClass().isAssignableFrom(another.asClass());
+        return this == another || asClass().isAssignableFrom(another.asClass());
     }
 
     /**
@@ -318,5 +318,9 @@ public interface TypeInfo {
 
     default TypeInfo consolidate(Map<VariableTypeInfo, TypeInfo> mapping) {
         return this;
+    }
+
+    default TypeInfo resolveBound(Class<?> iFace, int i) {
+        return NONE;
     }
 }

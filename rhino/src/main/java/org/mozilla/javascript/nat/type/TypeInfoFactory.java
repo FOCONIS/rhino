@@ -69,7 +69,7 @@ public interface TypeInfoFactory {
 
     TypeInfo create(TypeVariable<?> typeVariable);
 
-    TypeInfo create(ParameterizedType parameterizedType);
+    ParameterizedTypeInfo create(ParameterizedType parameterizedType);
 
     TypeInfo create(WildcardType wildcardType);
 

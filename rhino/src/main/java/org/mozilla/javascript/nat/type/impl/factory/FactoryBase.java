@@ -21,7 +21,7 @@ public interface FactoryBase extends TypeInfoFactory {
     }
 
     @Override
-    default TypeInfo create(ParameterizedType parameterizedType) {
+    default ParameterizedTypeInfo create(ParameterizedType parameterizedType) {
         return attachParam(
                 create(parameterizedType.getRawType()),
                 createList(parameterizedType.getActualTypeArguments()));
@@ -47,7 +47,7 @@ public interface FactoryBase extends TypeInfoFactory {
     }
 
     @Override
-    default TypeInfo attachParam(TypeInfo base, List<TypeInfo> params) {
+    default ParameterizedTypeInfo attachParam(TypeInfo base, List<TypeInfo> params) {
         if (base instanceof ParameterizedTypeInfo) {
             base = ((ParameterizedTypeInfo) base).rawType();
         }

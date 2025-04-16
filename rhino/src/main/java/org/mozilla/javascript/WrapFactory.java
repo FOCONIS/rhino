@@ -11,6 +11,7 @@ package org.mozilla.javascript;
 import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
+import org.mozilla.javascript.nat.type.TypeInfo;
 
 /**
  * Embeddings that wish to provide their own custom wrappings for Java objects may extend this class
@@ -44,13 +45,13 @@ public class WrapFactory {
      *     class, staticType will be used instead.
      * @return the wrapped value.
      */
-    public Object wrap(Context cx, Scriptable scope, Object obj, Class<?> staticType) {
+    public Object wrap(Context cx, Scriptable scope, Object obj, TypeInfo staticType) {
         if (obj == null || obj == Undefined.instance || obj instanceof Scriptable) {
             return obj;
         }
         if (staticType != null && staticType.isPrimitive()) {
-            if (staticType == Void.TYPE) return Undefined.instance;
-            if (staticType == Character.TYPE) return (int) (Character) obj;
+            if (staticType.isVoid()) return Undefined.instance;
+            if (staticType.isCharacter()) return (int) (Character) obj;
             return obj;
         }
         if (!isJavaPrimitiveWrap()) {
@@ -112,11 +113,11 @@ public class WrapFactory {
      * @return the wrapped value which shall not be null
      */
     public Scriptable wrapAsJavaObject(
-            Context cx, Scriptable scope, Object javaObject, Class<?> staticType) {
+            Context cx, Scriptable scope, Object javaObject, TypeInfo staticType) {
         if (List.class.isAssignableFrom(javaObject.getClass())) {
-            return new NativeJavaList(scope, javaObject);
+            return new NativeJavaList(scope, javaObject, staticType);
         } else if (Map.class.isAssignableFrom(javaObject.getClass())) {
-            return new NativeJavaMap(scope, javaObject);
+            return new NativeJavaMap(scope, javaObject, staticType);
         }
         return new NativeJavaObject(scope, javaObject, staticType);
     }
