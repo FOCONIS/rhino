@@ -3,7 +3,7 @@ package org.mozilla.javascript.nat.type;
 import java.util.IdentityHashMap;
 import java.util.List;
 
-public class EnumTypeInfo extends ClassTypeInfo {
+class EnumTypeInfo extends ClassTypeInfo {
     static final IdentityHashMap<Class<?>, EnumTypeInfo> CACHE = new IdentityHashMap<>();
 
     public static String getName(Object e) {

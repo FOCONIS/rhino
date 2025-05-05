@@ -2,7 +2,7 @@ package org.mozilla.javascript.nat.type;
 
 import org.mozilla.javascript.TypeInfo;
 
-public class PrimitiveClassTypeInfo extends ClassTypeInfo {
+class PrimitiveClassTypeInfo extends ClassTypeInfo {
     private final Object defaultValue;
 
     public PrimitiveClassTypeInfo(Class<?> type, Object defaultValue) {

@@ -1,6 +1,8 @@
 package org.mozilla.javascript.nat.type;
 
-public abstract class ClassTypeInfo extends TypeInfoBase {
+import org.mozilla.javascript.TypeFormatContext;
+
+abstract class ClassTypeInfo extends TypeInfoBase {
     private final Class<?> type;
 
     ClassTypeInfo(Class<?> type) {

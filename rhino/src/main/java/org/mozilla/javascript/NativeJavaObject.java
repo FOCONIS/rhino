@@ -21,7 +21,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
-import org.mozilla.javascript.nat.type.ParameterizedTypeInfo;
 
 /**
  * This class reflects non-Array Java objects into the JavaScript environment. It reflect fields
@@ -273,7 +272,7 @@ public class NativeJavaObject implements Scriptable, SymbolScriptable, Wrapper, 
     private Map<TypeInfo, TypeInfo> typeConsolidationMapping;
 
     /**
-     * @see org.mozilla.javascript.nat.TypeConsolidator#getMapping(Class)
+     * @see TypeConsolidator#getMapping(Class)
      * @see TypeInfo#consolidate(Map)
      */
     Map<TypeInfo, TypeInfo> extractTypeConsolidationMapping() {
@@ -283,15 +282,14 @@ public class NativeJavaObject implements Scriptable, SymbolScriptable, Wrapper, 
         if (typeConsolidationMapping != null) {
             return typeConsolidationMapping;
         }
-        if (staticType instanceof ParameterizedTypeInfo) {
-            var parameterized = (ParameterizedTypeInfo) staticType;
 
-            var params = parameterized.params();
+        var params = staticType.params();
+        if (!params.isEmpty()) {
             TypeVariable<? extends Class<?>>[] variables =
                     javaObject.getClass().getTypeParameters();
             if (variables.length == 0 || variables.length != params.size()) {
                 // try static type if dynamic type does not work
-                variables = parameterized.asClass().getTypeParameters();
+                variables = staticType.asClass().getTypeParameters();
                 if (variables.length == 0 || variables.length != params.size()) {
                     return setMapping(Collections.emptyMap());
                 }

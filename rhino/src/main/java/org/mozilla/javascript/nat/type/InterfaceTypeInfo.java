@@ -6,7 +6,7 @@ import java.util.IdentityHashMap;
 import org.mozilla.javascript.ByteAsBool;
 import org.mozilla.javascript.Kit;
 
-public class InterfaceTypeInfo extends ClassTypeInfo {
+class InterfaceTypeInfo extends ClassTypeInfo {
     /** Android device might not have {@link FunctionalInterface} class */
     @SuppressWarnings("unchecked")
     private static final Class<? extends Annotation> FN_INTERFACE =

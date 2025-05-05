@@ -5,7 +5,6 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Map;
-import org.mozilla.javascript.nat.TypeConsolidator;
 
 /**
  * holder for {@link java.lang.reflect.Executable} parameter information

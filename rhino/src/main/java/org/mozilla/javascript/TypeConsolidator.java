@@ -1,4 +1,4 @@
-package org.mozilla.javascript.nat;
+package org.mozilla.javascript;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -8,8 +8,6 @@ import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
-import org.mozilla.javascript.TypeInfo;
-import org.mozilla.javascript.nat.type.VariableTypeInfo;
 
 /**
  * @see TypeInfo#consolidate(Map)
@@ -32,8 +30,7 @@ public final class TypeConsolidator {
         return got == null ? Collections.emptyMap() : got;
     }
 
-    public static TypeInfo consolidateOrNone(
-            VariableTypeInfo variable, Map<VariableTypeInfo, TypeInfo> mapping) {
+    public static TypeInfo consolidateOrNone(TypeInfo variable, Map<TypeInfo, TypeInfo> mapping) {
         return mapping.getOrDefault(variable, TypeInfo.NONE);
     }
 

@@ -3,9 +3,10 @@ package org.mozilla.javascript.nat.type;
 import java.lang.reflect.Array;
 import java.util.Map;
 import org.mozilla.javascript.ByteAsBool;
+import org.mozilla.javascript.TypeFormatContext;
 import org.mozilla.javascript.TypeInfo;
 
-public abstract class TypeInfoBase implements TypeInfo {
+abstract class TypeInfoBase implements TypeInfo {
     private TypeInfo asArray;
     private Object emptyArray;
 

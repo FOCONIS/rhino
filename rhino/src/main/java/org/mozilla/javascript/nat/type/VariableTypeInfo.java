@@ -4,12 +4,13 @@ import java.lang.reflect.TypeVariable;
 import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.function.Consumer;
+import org.mozilla.javascript.TypeFormatContext;
 import org.mozilla.javascript.TypeInfo;
 
 /**
  * @author ZZZank
  */
-public class VariableTypeInfo extends TypeInfoBase {
+class VariableTypeInfo extends TypeInfoBase {
     static final IdentityHashMap<TypeVariable<?>, VariableTypeInfo> CACHE = new IdentityHashMap<>();
 
     private final TypeVariable<?> raw;

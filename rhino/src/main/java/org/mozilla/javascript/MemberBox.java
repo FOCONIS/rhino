@@ -17,7 +17,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.List;
 import java.util.Map;
-import org.mozilla.javascript.nat.TypeConsolidator;
 
 /**
  * Wrapper class for Method and Constructor instances to cache getParameterTypes() results, recover

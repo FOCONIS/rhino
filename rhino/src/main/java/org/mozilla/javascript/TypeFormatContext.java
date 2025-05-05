@@ -1,4 +1,4 @@
-package org.mozilla.javascript.nat.type;
+package org.mozilla.javascript;
 
 /**
  * @author ZZZank
@@ -13,12 +13,12 @@ public interface TypeFormatContext {
         builder.append(' ');
     }
 
-    default void formatArray(StringBuilder builder, ArrayTypeInfo type) {
+    default void formatArray(StringBuilder builder, TypeInfo type) {
         type.getComponentType().append(this, builder);
         builder.append('[').append(']');
     }
 
-    default void formatParameterized(StringBuilder builder, ParameterizedTypeInfo type) {
+    default void formatParameterized(StringBuilder builder, TypeInfo type) {
         type.rawType().append(this, builder);
 
         builder.append('<');
