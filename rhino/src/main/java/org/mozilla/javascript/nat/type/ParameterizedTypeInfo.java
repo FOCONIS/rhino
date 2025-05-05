@@ -127,7 +127,7 @@ public final class ParameterizedTypeInfo extends TypeInfoBase.OptionallyConsolid
     }
 
     @Override
-    protected TypeInfo consolidateImpl(Map<VariableTypeInfo, TypeInfo> mapping) {
+    protected TypeInfo consolidateImpl(Map<TypeInfo, TypeInfo> mapping) {
         var consolidatedParams = TypeConsolidator.consolidateOrNull(this.params, mapping);
         if (consolidatedParams == null) {
             return this;

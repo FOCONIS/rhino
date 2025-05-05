@@ -16,7 +16,7 @@ import org.mozilla.javascript.nat.type.VariableTypeInfo;
  * @author ZZZank
  */
 public final class TypeConsolidator {
-    private static final IdentityHashMap<Class<?>, Map<VariableTypeInfo, TypeInfo>> MAPPINGS =
+    private static final IdentityHashMap<Class<?>, Map<TypeInfo, TypeInfo>> MAPPINGS =
             new IdentityHashMap<>();
 
     private static final boolean DEBUG = false;
@@ -24,7 +24,7 @@ public final class TypeConsolidator {
     private TypeConsolidator() {}
 
     /** create a mapping for usage in {@link TypeInfo#consolidate(Map)} */
-    public static Map<VariableTypeInfo, TypeInfo> getMapping(Class<?> type) {
+    public static Map<TypeInfo, TypeInfo> getMapping(Class<?> type) {
         if (DEBUG) {
             System.out.println("getting mapping from: " + type);
         }
@@ -38,7 +38,7 @@ public final class TypeConsolidator {
     }
 
     public static List<TypeInfo> consolidateOrNull(
-            List<TypeInfo> original, Map<VariableTypeInfo, TypeInfo> mapping) {
+            List<TypeInfo> original, Map<TypeInfo, TypeInfo> mapping) {
         var len = original.size();
         if (DEBUG) {
             System.out.println("consolidating" + original);
@@ -62,8 +62,7 @@ public final class TypeConsolidator {
         return different ? consolidated : null;
     }
 
-    public static TypeInfo[] consolidateAll(
-            TypeInfo[] original, Map<VariableTypeInfo, TypeInfo> mapping) {
+    public static TypeInfo[] consolidateAll(TypeInfo[] original, Map<TypeInfo, TypeInfo> mapping) {
         var len = original.length;
         if (DEBUG) {
             System.out.println("consolidating" + Arrays.toString(original));
@@ -91,7 +90,7 @@ public final class TypeConsolidator {
         return consolidatedAll == null ? original : consolidatedAll;
     }
 
-    private static Map<VariableTypeInfo, TypeInfo> getMappingImpl(Class<?> type) {
+    private static Map<TypeInfo, TypeInfo> getMappingImpl(Class<?> type) {
         if (type == null || type.isPrimitive() || type == Object.class) {
             return null;
         }
@@ -100,8 +99,8 @@ public final class TypeConsolidator {
         }
     }
 
-    private static Map<VariableTypeInfo, TypeInfo> collect(Class<?> type) {
-        var mapping = new IdentityHashMap<VariableTypeInfo, TypeInfo>();
+    private static Map<TypeInfo, TypeInfo> collect(Class<?> type) {
+        var mapping = new IdentityHashMap<TypeInfo, TypeInfo>();
 
         /*
          * (classes are named as 'XXX': A, B, C, ...)
@@ -150,7 +149,7 @@ public final class TypeConsolidator {
     }
 
     private static void extractSuperMapping(
-            Type superType, IdentityHashMap<VariableTypeInfo, TypeInfo> pushTo) {
+            Type superType, IdentityHashMap<TypeInfo, TypeInfo> pushTo) {
         if (superType instanceof ParameterizedType) {
             final var parameterized = (ParameterizedType) superType;
             if (parameterized.getRawType() instanceof Class<?>) {
@@ -164,8 +163,7 @@ public final class TypeConsolidator {
         }
     }
 
-    private static Map<VariableTypeInfo, TypeInfo> postMapping(
-            Map<VariableTypeInfo, TypeInfo> mapping) {
+    private static Map<TypeInfo, TypeInfo> postMapping(Map<TypeInfo, TypeInfo> mapping) {
         switch (mapping.size()) {
             case 0:
                 if (DEBUG) {

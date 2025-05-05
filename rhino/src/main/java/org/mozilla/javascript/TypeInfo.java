@@ -17,10 +17,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
-import org.mozilla.javascript.nat.ByteAsBool;
 import org.mozilla.javascript.nat.type.TypeFormatContext;
-import org.mozilla.javascript.nat.type.TypeInfoExt;
-import org.mozilla.javascript.nat.type.VariableTypeInfo;
 
 /**
  * A representation of Java type, aiming at preserving more type information than what a {@link
@@ -122,7 +119,7 @@ public interface TypeInfo {
         return loader.of(c);
     }
 
-    static VariableTypeInfo of(TypeVariable<?> variable) {
+    static TypeInfo of(TypeVariable<?> variable) {
         return loader.of(variable);
     }
 
@@ -372,12 +369,12 @@ public interface TypeInfo {
     }
 
     /**
-     * consolidate a type with provided mapping, that is, try to replace {@link VariableTypeInfo} in
-     * this type with corresponding type in the same mapping entry
+     * consolidate a type with provided mapping, that is, try to replace VariableTypeInfo in this
+     * type with corresponding type in the same mapping entry
      *
      * @see org.mozilla.javascript.nat.TypeConsolidator#getMapping(Class)
      */
-    default TypeInfo consolidate(Map<VariableTypeInfo, TypeInfo> mapping) {
+    default TypeInfo consolidate(Map<TypeInfo, TypeInfo> mapping) {
         return this;
     }
 }

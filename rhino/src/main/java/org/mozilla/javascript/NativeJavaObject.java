@@ -22,8 +22,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import org.mozilla.javascript.nat.type.ParameterizedTypeInfo;
-import org.mozilla.javascript.nat.type.TypeInfoExt;
-import org.mozilla.javascript.nat.type.VariableTypeInfo;
 
 /**
  * This class reflects non-Array Java objects into the JavaScript environment. It reflect fields
@@ -272,13 +270,13 @@ public class NativeJavaObject implements Scriptable, SymbolScriptable, Wrapper, 
         return value;
     }
 
-    private Map<VariableTypeInfo, TypeInfo> typeConsolidationMapping;
+    private Map<TypeInfo, TypeInfo> typeConsolidationMapping;
 
     /**
      * @see org.mozilla.javascript.nat.TypeConsolidator#getMapping(Class)
      * @see TypeInfo#consolidate(Map)
      */
-    Map<VariableTypeInfo, TypeInfo> extractTypeConsolidationMapping() {
+    Map<TypeInfo, TypeInfo> extractTypeConsolidationMapping() {
         if (this.javaObject == null) {
             return Collections.emptyMap();
         }
@@ -299,7 +297,7 @@ public class NativeJavaObject implements Scriptable, SymbolScriptable, Wrapper, 
                 }
             }
 
-            var builder = new HashMap<VariableTypeInfo, TypeInfo>();
+            var builder = new HashMap<TypeInfo, TypeInfo>();
             for (int i = 0; i < variables.length; i++) {
                 builder.put(TypeInfo.of(variables[i]), params.get(i));
             }
@@ -308,8 +306,7 @@ public class NativeJavaObject implements Scriptable, SymbolScriptable, Wrapper, 
         return setMapping(Collections.emptyMap());
     }
 
-    private Map<VariableTypeInfo, TypeInfo> setMapping(
-            Map<VariableTypeInfo, TypeInfo> typeConsolidationMapping) {
+    private Map<TypeInfo, TypeInfo> setMapping(Map<TypeInfo, TypeInfo> typeConsolidationMapping) {
         this.typeConsolidationMapping = typeConsolidationMapping;
         return typeConsolidationMapping;
     }

@@ -11,9 +11,9 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import org.mozilla.javascript.ByteAsBool;
 import org.mozilla.javascript.TypeInfo;
 import org.mozilla.javascript.TypeInfoLoader;
-import org.mozilla.javascript.nat.ByteAsBool;
 
 /**
  * @author Roland Praml, Foconis Analytics GmbH
@@ -179,7 +179,7 @@ public class TypeInfoLoaderImpl implements TypeInfoLoader {
     }
 
     @Override
-    public VariableTypeInfo of(TypeVariable<?> variable) {
+    public TypeInfo of(TypeVariable<?> variable) {
         synchronized (VariableTypeInfo.CACHE) {
             return VariableTypeInfo.CACHE.computeIfAbsent(variable, VariableTypeInfo::new);
         }

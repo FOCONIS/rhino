@@ -5,9 +5,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Map;
-import org.mozilla.javascript.nat.ByteAsBool;
 import org.mozilla.javascript.nat.TypeConsolidator;
-import org.mozilla.javascript.nat.type.VariableTypeInfo;
 
 /**
  * holder for {@link java.lang.reflect.Executable} parameter information
@@ -66,7 +64,7 @@ class JavaParameters {
         return wrapArgs(args, this.types);
     }
 
-    public Object[] wrapArgs(final Object[] args, final Map<VariableTypeInfo, TypeInfo> mapping) {
+    public Object[] wrapArgs(final Object[] args, final Map<TypeInfo, TypeInfo> mapping) {
         if (ByteAsBool.isTrue(consolidatable)) {
             return wrapArgs(args, TypeConsolidator.consolidateOrNull(this.types, mapping));
         } else if (ByteAsBool.isFalse(consolidatable)) {
