@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 import org.mozilla.javascript.FunctionObject;
 import org.mozilla.javascript.Scriptable;
+import org.mozilla.javascript.TypeInfo;
 import org.mozilla.javascript.nat.TypeConsolidator;
 
 public final class ParameterizedTypeInfo extends TypeInfoBase.OptionallyConsolidatable {

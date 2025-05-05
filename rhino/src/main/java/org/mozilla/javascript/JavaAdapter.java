@@ -25,7 +25,6 @@ import java.util.Map;
 import java.util.Set;
 import org.mozilla.classfile.ByteCode;
 import org.mozilla.classfile.ClassFileWriter;
-import org.mozilla.javascript.nat.type.TypeInfo;
 
 public final class JavaAdapter implements IdFunctionCall {
     /**

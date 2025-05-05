@@ -22,7 +22,6 @@ import java.util.ServiceLoader;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import org.mozilla.javascript.ast.FunctionNode;
-import org.mozilla.javascript.nat.type.TypeInfo;
 import org.mozilla.javascript.typedarrays.NativeArrayBuffer;
 import org.mozilla.javascript.typedarrays.NativeDataView;
 import org.mozilla.javascript.typedarrays.NativeFloat32Array;

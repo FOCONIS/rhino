@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 import org.mozilla.javascript.nat.ByteAsBool;
 import org.mozilla.javascript.nat.TypeConsolidator;
-import org.mozilla.javascript.nat.type.TypeInfo;
 import org.mozilla.javascript.nat.type.VariableTypeInfo;
 
 /**

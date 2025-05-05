@@ -3,6 +3,7 @@ package org.mozilla.javascript.nat.type;
 import java.util.Map;
 import java.util.function.Consumer;
 import org.mozilla.javascript.FunctionObject;
+import org.mozilla.javascript.TypeInfo;
 
 public final class ArrayTypeInfo extends TypeInfoBase.OptionallyConsolidatable {
     private final TypeInfo component;

@@ -2,6 +2,7 @@ package org.mozilla.javascript.nat.type;
 
 import java.lang.reflect.Array;
 import java.util.Map;
+import org.mozilla.javascript.TypeInfo;
 import org.mozilla.javascript.nat.ByteAsBool;
 
 public abstract class TypeInfoBase implements TypeInfo {

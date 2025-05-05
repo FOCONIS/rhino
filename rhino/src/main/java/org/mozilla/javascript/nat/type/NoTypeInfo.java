@@ -1,6 +1,7 @@
 package org.mozilla.javascript.nat.type;
 
 import java.util.function.Consumer;
+import org.mozilla.javascript.TypeInfo;
 
 public final class NoTypeInfo implements TypeInfo {
     static final NoTypeInfo INSTANCE = new NoTypeInfo();

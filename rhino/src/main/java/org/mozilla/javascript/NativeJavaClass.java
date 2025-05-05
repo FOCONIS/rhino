@@ -8,7 +8,6 @@ package org.mozilla.javascript;
 
 import java.lang.reflect.Modifier;
 import java.util.Map;
-import org.mozilla.javascript.nat.type.TypeInfo;
 
 /**
  * This class reflects Java classes into the JavaScript environment, mainly for constructors and

@@ -8,7 +8,6 @@ package org.mozilla.javascript;
 
 import java.lang.reflect.Array;
 import java.util.Objects;
-import org.mozilla.javascript.nat.type.TypeInfo;
 
 /**
  * This class reflects Java arrays into the JavaScript environment.

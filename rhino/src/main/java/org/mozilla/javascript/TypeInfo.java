@@ -1,4 +1,4 @@
-package org.mozilla.javascript.nat.type;
+package org.mozilla.javascript;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.GenericArrayType;
@@ -10,15 +10,17 @@ import java.util.Date;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
-import org.mozilla.javascript.FunctionObject;
-import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.nat.ByteAsBool;
+import org.mozilla.javascript.nat.type.TypeFormatContext;
+import org.mozilla.javascript.nat.type.TypeInfoExt;
+import org.mozilla.javascript.nat.type.VariableTypeInfo;
 
 /**
  * A representation of Java type, aiming at preserving more type information than what a {@link
@@ -29,7 +31,12 @@ import org.mozilla.javascript.nat.ByteAsBool;
  * @see #is(Class) : how to determine whether a TypeInfo represents a specific class
  */
 public interface TypeInfo {
-    TypeInfo NONE = NoTypeInfo.INSTANCE;
+
+    TypeInfoLoader loader =
+            Objects.requireNonNull(
+                    ScriptRuntime.loadOneServiceImplementation(TypeInfoLoader.class),
+                    "TypeInfoLoader not found");
+    TypeInfo NONE = loader.of((Class<?>) null);
 
     TypeInfo[] EMPTY_ARRAY = new TypeInfo[0];
 
@@ -37,47 +44,47 @@ public interface TypeInfo {
      * use {@link TypeInfo#isObjectExact()} to determine whether a type represents a {@link Object}
      * class, using `typeInfo == TypeInfo.OBJECT` might cause problem with VariableTypeInfo
      */
-    TypeInfo OBJECT = new BasicClassTypeInfo(Object.class);
+    TypeInfo OBJECT = loader.of(Object.class);
 
     TypeInfo OBJECT_ARRAY = OBJECT.asArray();
 
-    TypeInfo PRIMITIVE_VOID = new PrimitiveClassTypeInfo(Void.TYPE, null);
-    TypeInfo PRIMITIVE_BOOLEAN = new PrimitiveClassTypeInfo(Boolean.TYPE, false);
-    TypeInfo PRIMITIVE_BYTE = new PrimitiveClassTypeInfo(Byte.TYPE, (byte) 0);
-    TypeInfo PRIMITIVE_SHORT = new PrimitiveClassTypeInfo(Short.TYPE, (short) 0);
-    TypeInfo PRIMITIVE_INT = new PrimitiveClassTypeInfo(Integer.TYPE, 0);
-    TypeInfo PRIMITIVE_LONG = new PrimitiveClassTypeInfo(Long.TYPE, 0L);
-    TypeInfo PRIMITIVE_FLOAT = new PrimitiveClassTypeInfo(Float.TYPE, 0F);
-    TypeInfo PRIMITIVE_DOUBLE = new PrimitiveClassTypeInfo(Double.TYPE, 0D);
-    TypeInfo PRIMITIVE_CHARACTER = new PrimitiveClassTypeInfo(Character.TYPE, (char) 0);
+    TypeInfo PRIMITIVE_VOID = loader.of(Void.TYPE);
+    TypeInfo PRIMITIVE_BOOLEAN = loader.of(Boolean.TYPE);
+    TypeInfo PRIMITIVE_BYTE = loader.of(Byte.TYPE);
+    TypeInfo PRIMITIVE_SHORT = loader.of(Short.TYPE);
+    TypeInfo PRIMITIVE_INT = loader.of(Integer.TYPE);
+    TypeInfo PRIMITIVE_LONG = loader.of(Long.TYPE);
+    TypeInfo PRIMITIVE_FLOAT = loader.of(Float.TYPE);
+    TypeInfo PRIMITIVE_DOUBLE = loader.of(Double.TYPE);
+    TypeInfo PRIMITIVE_CHARACTER = loader.of(Character.TYPE);
 
-    TypeInfo VOID = new BasicClassTypeInfo(Void.class);
-    TypeInfo BOOLEAN = new BasicClassTypeInfo(Boolean.class);
-    TypeInfo BYTE = new BasicClassTypeInfo(Byte.class);
-    TypeInfo SHORT = new BasicClassTypeInfo(Short.class);
-    TypeInfo INT = new BasicClassTypeInfo(Integer.class);
-    TypeInfo LONG = new BasicClassTypeInfo(Long.class);
-    TypeInfo FLOAT = new BasicClassTypeInfo(Float.class);
-    TypeInfo DOUBLE = new BasicClassTypeInfo(Double.class);
-    TypeInfo CHARACTER = new BasicClassTypeInfo(Character.class);
+    TypeInfo VOID = loader.of(Void.class);
+    TypeInfo BOOLEAN = loader.of(Boolean.class);
+    TypeInfo BYTE = loader.of(Byte.class);
+    TypeInfo SHORT = loader.of(Short.class);
+    TypeInfo INT = loader.of(Integer.class);
+    TypeInfo LONG = loader.of(Long.class);
+    TypeInfo FLOAT = loader.of(Float.class);
+    TypeInfo DOUBLE = loader.of(Double.class);
+    TypeInfo CHARACTER = loader.of(Character.class);
 
-    TypeInfo NUMBER = new BasicClassTypeInfo(Number.class);
-    TypeInfo STRING = new BasicClassTypeInfo(String.class);
+    TypeInfo NUMBER = loader.of(Number.class);
+    TypeInfo STRING = loader.of(String.class);
     TypeInfo STRING_ARRAY = STRING.asArray();
-    TypeInfo RAW_CLASS = new BasicClassTypeInfo(Class.class);
-    TypeInfo DATE = new BasicClassTypeInfo(Date.class);
+    TypeInfo RAW_CLASS = loader.of(Class.class);
+    TypeInfo DATE = loader.of(Date.class);
 
-    TypeInfo RUNNABLE = new InterfaceTypeInfo(Runnable.class, ByteAsBool.TRUE);
-    TypeInfo RAW_CONSUMER = new InterfaceTypeInfo(Consumer.class, ByteAsBool.TRUE);
-    TypeInfo RAW_SUPPLIER = new InterfaceTypeInfo(Supplier.class, ByteAsBool.TRUE);
-    TypeInfo RAW_FUNCTION = new InterfaceTypeInfo(Function.class, ByteAsBool.TRUE);
-    TypeInfo RAW_PREDICATE = new InterfaceTypeInfo(Predicate.class, ByteAsBool.TRUE);
+    TypeInfo RUNNABLE = loader.interfaceTypeInfo(Runnable.class, ByteAsBool.TRUE);
+    TypeInfo RAW_CONSUMER = loader.interfaceTypeInfo(Consumer.class, ByteAsBool.TRUE);
+    TypeInfo RAW_SUPPLIER = loader.interfaceTypeInfo(Supplier.class, ByteAsBool.TRUE);
+    TypeInfo RAW_FUNCTION = loader.interfaceTypeInfo(Function.class, ByteAsBool.TRUE);
+    TypeInfo RAW_PREDICATE = loader.interfaceTypeInfo(Predicate.class, ByteAsBool.TRUE);
 
-    TypeInfo RAW_LIST = new InterfaceTypeInfo(List.class, ByteAsBool.FALSE);
-    TypeInfo RAW_SET = new InterfaceTypeInfo(Set.class, ByteAsBool.FALSE);
-    TypeInfo RAW_MAP = new InterfaceTypeInfo(Map.class, ByteAsBool.FALSE);
-    TypeInfo RAW_OPTIONAL = new BasicClassTypeInfo(Optional.class);
-    TypeInfo RAW_ENUM_SET = new BasicClassTypeInfo(EnumSet.class);
+    TypeInfo RAW_LIST = loader.interfaceTypeInfo(List.class, ByteAsBool.FALSE);
+    TypeInfo RAW_SET = loader.interfaceTypeInfo(Set.class, ByteAsBool.FALSE);
+    TypeInfo RAW_MAP = loader.interfaceTypeInfo(Map.class, ByteAsBool.FALSE);
+    TypeInfo RAW_OPTIONAL = loader.of(Optional.class);
+    TypeInfo RAW_ENUM_SET = loader.of(EnumSet.class);
 
     Class<?> asClass();
 
@@ -112,102 +119,11 @@ public interface TypeInfo {
     }
 
     static TypeInfo of(Class<?> c) {
-        if (c == null) {
-            return NONE;
-        } else if (c == Object.class) {
-            return OBJECT;
-        }
-        if (c.isPrimitive()) {
-            if (c == Void.TYPE) {
-                return PRIMITIVE_VOID;
-            } else if (c == Boolean.TYPE) {
-                return PRIMITIVE_BOOLEAN;
-            } else if (c == Byte.TYPE) {
-                return PRIMITIVE_BYTE;
-            } else if (c == Short.TYPE) {
-                return PRIMITIVE_SHORT;
-            } else if (c == Integer.TYPE) {
-                return PRIMITIVE_INT;
-            } else if (c == Long.TYPE) {
-                return PRIMITIVE_LONG;
-            } else if (c == Float.TYPE) {
-                return PRIMITIVE_FLOAT;
-            } else if (c == Double.TYPE) {
-                return PRIMITIVE_DOUBLE;
-            } else if (c == Character.TYPE) {
-                return PRIMITIVE_CHARACTER;
-            }
-        }
-        if (c == Void.class) {
-            return VOID;
-        } else if (c == Boolean.class) {
-            return BOOLEAN;
-        } else if (c == Byte.class) {
-            return BYTE;
-        } else if (c == Short.class) {
-            return SHORT;
-        } else if (c == Integer.class) {
-            return INT;
-        } else if (c == Long.class) {
-            return LONG;
-        } else if (c == Float.class) {
-            return FLOAT;
-        } else if (c == Double.class) {
-            return DOUBLE;
-        } else if (c == Character.class) {
-            return CHARACTER;
-        } else if (c == Number.class) {
-            return NUMBER;
-        } else if (c == String.class) {
-            return STRING;
-        } else if (c == Class.class) {
-            return RAW_CLASS;
-        } else if (c == Date.class) {
-            return DATE;
-        } else if (c == Optional.class) {
-            return RAW_OPTIONAL;
-        } else if (c == EnumSet.class) {
-            return RAW_ENUM_SET;
-        } else if (c == Runnable.class) {
-            return RUNNABLE;
-        } else if (c == Consumer.class) {
-            return RAW_CONSUMER;
-        } else if (c == Supplier.class) {
-            return RAW_SUPPLIER;
-        } else if (c == Function.class) {
-            return RAW_FUNCTION;
-        } else if (c == Predicate.class) {
-            return RAW_PREDICATE;
-        } else if (c == List.class) {
-            return RAW_LIST;
-        } else if (c == Set.class) {
-            return RAW_SET;
-        } else if (c == Map.class) {
-            return RAW_MAP;
-        } else if (c == Object[].class) {
-            return OBJECT_ARRAY;
-        } else if (c == String[].class) {
-            return STRING_ARRAY;
-        } else if (c.isArray()) {
-            return of(c.getComponentType()).asArray();
-        } else if (c.isEnum()) {
-            synchronized (EnumTypeInfo.CACHE) {
-                return EnumTypeInfo.CACHE.computeIfAbsent(c, EnumTypeInfo::new);
-            }
-        } else if (c.isInterface()) {
-            synchronized (InterfaceTypeInfo.CACHE) {
-                return InterfaceTypeInfo.CACHE.computeIfAbsent(c, InterfaceTypeInfo::new);
-            }
-        }
-        synchronized (BasicClassTypeInfo.CACHE) {
-            return BasicClassTypeInfo.CACHE.computeIfAbsent(c, BasicClassTypeInfo::new);
-        }
+        return loader.of(c);
     }
 
     static VariableTypeInfo of(TypeVariable<?> variable) {
-        synchronized (VariableTypeInfo.CACHE) {
-            return VariableTypeInfo.CACHE.computeIfAbsent(variable, VariableTypeInfo::new);
-        }
+        return loader.of(variable);
     }
 
     static TypeInfo of(Type type) {
@@ -281,7 +197,7 @@ public interface TypeInfo {
      * @see #getComponentType()
      */
     default TypeInfo asArray() {
-        return new ArrayTypeInfo(this);
+        return loader.arrayTypeInfo(this);
     }
 
     /**
@@ -295,7 +211,7 @@ public interface TypeInfo {
             return this;
         }
 
-        return new ParameterizedTypeInfo(this, List.of(params));
+        return loader.parameterizedTypeInfo(this, List.of(params));
     }
 
     /**

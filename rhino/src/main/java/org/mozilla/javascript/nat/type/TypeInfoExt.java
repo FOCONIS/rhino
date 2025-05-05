@@ -5,6 +5,7 @@ import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Function;
 import org.mozilla.javascript.NativeIterator;
 import org.mozilla.javascript.Scriptable;
+import org.mozilla.javascript.TypeInfo;
 
 /**
  * @see TypeInfo

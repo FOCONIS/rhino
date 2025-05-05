@@ -4,6 +4,7 @@ import java.lang.reflect.TypeVariable;
 import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.function.Consumer;
+import org.mozilla.javascript.TypeInfo;
 
 /**
  * @author ZZZank

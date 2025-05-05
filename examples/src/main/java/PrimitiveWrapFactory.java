@@ -6,8 +6,8 @@
 
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Scriptable;
+import org.mozilla.javascript.TypeInfo;
 import org.mozilla.javascript.WrapFactory;
-import org.mozilla.javascript.nat.type.TypeInfo;
 
 /**
  * An example WrapFactory that can be used to avoid wrapping of Java types that can be converted to

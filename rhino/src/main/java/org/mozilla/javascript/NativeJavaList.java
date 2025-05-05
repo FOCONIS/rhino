@@ -7,7 +7,6 @@ package org.mozilla.javascript;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.mozilla.javascript.nat.type.TypeInfo;
 
 /**
  * <code>NativeJavaList</code> is a wrapper for java objects implementing <code>java.util.List

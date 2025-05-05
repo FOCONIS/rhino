@@ -8,7 +8,7 @@ import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
-import org.mozilla.javascript.nat.type.TypeInfo;
+import org.mozilla.javascript.TypeInfo;
 import org.mozilla.javascript.nat.type.VariableTypeInfo;
 
 /**

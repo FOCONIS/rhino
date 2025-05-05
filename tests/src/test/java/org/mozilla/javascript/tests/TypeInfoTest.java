@@ -7,7 +7,7 @@ import java.util.function.Function;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mozilla.javascript.FunctionObject;
-import org.mozilla.javascript.nat.type.TypeInfo;
+import org.mozilla.javascript.TypeInfo;
 import org.mozilla.javascript.nat.type.VariableTypeInfo;
 
 /**

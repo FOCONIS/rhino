@@ -22,7 +22,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import org.mozilla.javascript.nat.type.ParameterizedTypeInfo;
-import org.mozilla.javascript.nat.type.TypeInfo;
 import org.mozilla.javascript.nat.type.TypeInfoExt;
 import org.mozilla.javascript.nat.type.VariableTypeInfo;
 

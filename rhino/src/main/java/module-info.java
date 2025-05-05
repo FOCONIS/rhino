@@ -15,11 +15,14 @@ module org.mozilla.rhino {
     exports org.mozilla.javascript.config;
 
     uses org.mozilla.javascript.RegExpLoader;
+    uses org.mozilla.javascript.TypeInfoLoader;
     uses org.mozilla.javascript.xml.XMLLoader;
     uses org.mozilla.javascript.config.RhinoPropertiesLoader;
 
     provides org.mozilla.javascript.RegExpLoader with
             org.mozilla.javascript.regexp.RegExpLoaderImpl;
+    provides org.mozilla.javascript.TypeInfoLoader with
+            org.mozilla.javascript.nat.type.TypeInfoLoaderImpl;
 
     requires java.compiler;
     requires jdk.dynalink;

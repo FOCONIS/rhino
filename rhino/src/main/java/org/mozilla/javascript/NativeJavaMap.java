@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import org.mozilla.javascript.nat.type.TypeInfo;
 
 /**
  * <code>NativeJavaMap</code> is a wrapper for java objects implementing <code>java.util.Map

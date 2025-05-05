@@ -457,7 +457,7 @@ public class NativeJavaMethod extends BaseFunction {
      * <p>3. otherwise -> return an int array holding all computed conversion weights, whose length
      * will be {@code args.length} for non-vararg member or {@code args.length-1} for vararg member
      *
-     * @see NativeJavaObject#getConversionWeight(Object, org.mozilla.javascript.nat.type.TypeInfo)
+     * @see NativeJavaObject#getConversionWeight(Object, TypeInfo)
      * @see NativeJavaObject#canConvert(Object, Class)
      */
     static int[] failFastConversionWeights(Object[] args, MemberBox member) {

@@ -11,7 +11,6 @@ package org.mozilla.javascript;
 import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
-import org.mozilla.javascript.nat.type.TypeInfo;
 
 /**
  * Embeddings that wish to provide their own custom wrappings for Java objects may extend this class
