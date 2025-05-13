@@ -13,6 +13,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import org.junit.Test;
 import org.mozilla.javascript.Context;
@@ -21,6 +22,7 @@ import org.mozilla.javascript.EvaluatorException;
 import org.mozilla.javascript.NativeArray;
 import org.mozilla.javascript.NativeJavaMethod;
 import org.mozilla.javascript.Scriptable;
+import org.mozilla.javascript.Undefined;
 import org.mozilla.javascript.tools.shell.Global;
 
 /** From @makusuko (Markus Sunela), imported from PR https://github.com/mozilla/rhino/pull/561 */
@@ -133,6 +135,21 @@ public class NativeJavaMapTest {
         assertEquals("a", runScriptAsString("value['a']['a']", map, true));
         assertEquals("a", runScriptAsString("value.a.a", map, true));
         assertEquals("b", runScriptAsString("value.a.a = 'b';value.a.a", map, true));
+    }
+
+    @Test
+    public void accessMapInGenericContainer() {
+        // generic container may have a `Object get()` method due type erasure.
+        AtomicReference<Map<String, String>> reference = new AtomicReference<>();
+        Map<String, String> map = new HashMap<>();
+        map.put("a", "a");
+        reference.set(map);
+        // direct access (without cast) would not allow to access 'a', because get() returns an object
+        assertEquals("undefined", runScriptAsString("value.get()['a']", reference, true));
+        assertEquals("undefined", runScriptAsString("value.get().a", reference, true));
+        // we need an explicit cast here.
+        assertEquals("a", runScriptAsString("(java.util.Map)(value.get())['a']", reference, true));
+        assertEquals("a", runScriptAsString("(java.util.Map)(value.get()).a", reference, true));
     }
 
     @Test

@@ -125,7 +125,10 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
             do {
                 if (p instanceof Wrapper) {
                     Object o = ((Wrapper) p).unwrap();
-                    if (c.isInstance(o)) return p;
+                    if (c.isInstance(o)) {
+                        // rewrap with given static type
+                        return cx.getWrapFactory().wrap(cx, this, o, c);
+                    }
                 }
                 p = p.getPrototype();
             } while (p != null);
