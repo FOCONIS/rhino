@@ -24,7 +24,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import org.mozilla.javascript.*;
+import org.mozilla.javascript.ClassShutter;
+import org.mozilla.javascript.Context;
+import org.mozilla.javascript.ContextFactory;
+import org.mozilla.javascript.Kit;
+import org.mozilla.javascript.MemberBox;
+import org.mozilla.javascript.ScriptRuntime;
+import org.mozilla.javascript.Scriptable;
+import org.mozilla.javascript.ScriptableObject;
 import org.mozilla.javascript.lc.type.TypeInfo;
 import org.mozilla.javascript.lc.type.TypeInfoFactory;
 

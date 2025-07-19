@@ -11,7 +11,17 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.concurrent.CopyOnWriteArrayList;
-import org.mozilla.javascript.*;
+import org.mozilla.javascript.BaseFunction;
+import org.mozilla.javascript.Context;
+import org.mozilla.javascript.DecompilerFlag;
+import org.mozilla.javascript.Function;
+import org.mozilla.javascript.Kit;
+import org.mozilla.javascript.MemberBox;
+import org.mozilla.javascript.NativeArray;
+import org.mozilla.javascript.ScriptRuntime;
+import org.mozilla.javascript.Scriptable;
+import org.mozilla.javascript.Undefined;
+import org.mozilla.javascript.Wrapper;
 import org.mozilla.javascript.lc.type.TypeInfoFactory;
 
 /**

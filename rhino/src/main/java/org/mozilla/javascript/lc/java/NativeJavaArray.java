@@ -8,7 +8,15 @@ package org.mozilla.javascript.lc.java;
 
 import java.lang.reflect.Array;
 import java.util.Objects;
-import org.mozilla.javascript.*;
+import org.mozilla.javascript.Context;
+import org.mozilla.javascript.ScriptRuntime;
+import org.mozilla.javascript.Scriptable;
+import org.mozilla.javascript.ScriptableObject;
+import org.mozilla.javascript.Symbol;
+import org.mozilla.javascript.SymbolKey;
+import org.mozilla.javascript.SymbolScriptable;
+import org.mozilla.javascript.Undefined;
+import org.mozilla.javascript.Wrapper;
 
 /**
  * This class reflects Java arrays into the JavaScript environment.

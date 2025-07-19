@@ -7,7 +7,12 @@ package org.mozilla.javascript.lc.java;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.mozilla.javascript.*;
+import org.mozilla.javascript.Context;
+import org.mozilla.javascript.ScriptRuntime;
+import org.mozilla.javascript.Scriptable;
+import org.mozilla.javascript.Symbol;
+import org.mozilla.javascript.SymbolKey;
+import org.mozilla.javascript.Undefined;
 
 /**
  * <code>NativeJavaList</code> is a wrapper for java objects implementing <code>java.util.List

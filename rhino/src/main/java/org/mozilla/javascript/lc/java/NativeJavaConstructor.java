@@ -6,7 +6,10 @@
 
 package org.mozilla.javascript.lc.java;
 
-import org.mozilla.javascript.*;
+import org.mozilla.javascript.BaseFunction;
+import org.mozilla.javascript.Context;
+import org.mozilla.javascript.MemberBox;
+import org.mozilla.javascript.Scriptable;
 
 /**
  * This class reflects a single Java constructor into the JavaScript environment. It satisfies a

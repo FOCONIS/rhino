@@ -6,7 +6,15 @@
 
 package org.mozilla.javascript.lc.java;
 
-import org.mozilla.javascript.*;
+import org.mozilla.javascript.Context;
+import org.mozilla.javascript.Function;
+import org.mozilla.javascript.IdFunctionCall;
+import org.mozilla.javascript.IdFunctionObject;
+import org.mozilla.javascript.ScriptRuntime;
+import org.mozilla.javascript.Scriptable;
+import org.mozilla.javascript.ScriptableObject;
+import org.mozilla.javascript.StatelessEquals;
+import org.mozilla.javascript.Wrapper;
 
 /**
  * This class reflects Java packages into the JavaScript environment. We lazily reflect classes and

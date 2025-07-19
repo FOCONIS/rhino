@@ -13,7 +13,14 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Proxy;
 import java.util.HashSet;
-import org.mozilla.javascript.*;
+import org.mozilla.javascript.Callable;
+import org.mozilla.javascript.Context;
+import org.mozilla.javascript.ContextFactory;
+import org.mozilla.javascript.ScriptRuntime;
+import org.mozilla.javascript.Scriptable;
+import org.mozilla.javascript.ScriptableObject;
+import org.mozilla.javascript.VMBridge;
+import org.mozilla.javascript.WrapFactory;
 
 /**
  * Adapter to use JS function as implementation of Java interfaces with single method or multiple

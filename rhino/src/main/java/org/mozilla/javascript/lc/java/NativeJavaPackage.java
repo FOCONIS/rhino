@@ -10,7 +10,14 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.HashSet;
 import java.util.Set;
-import org.mozilla.javascript.*;
+import org.mozilla.javascript.ClassShutter;
+import org.mozilla.javascript.Context;
+import org.mozilla.javascript.JavaEquals;
+import org.mozilla.javascript.Kit;
+import org.mozilla.javascript.ScriptRuntime;
+import org.mozilla.javascript.Scriptable;
+import org.mozilla.javascript.ScriptableObject;
+import org.mozilla.javascript.WrapFactory;
 
 /**
  * This class reflects Java packages into the JavaScript environment. We lazily reflect classes and

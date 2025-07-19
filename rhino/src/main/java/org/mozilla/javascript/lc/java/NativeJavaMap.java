@@ -9,7 +9,16 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import org.mozilla.javascript.*;
+import org.mozilla.javascript.Callable;
+import org.mozilla.javascript.Context;
+import org.mozilla.javascript.ES6Iterator;
+import org.mozilla.javascript.ScriptRuntime;
+import org.mozilla.javascript.Scriptable;
+import org.mozilla.javascript.ScriptableObject;
+import org.mozilla.javascript.Symbol;
+import org.mozilla.javascript.SymbolKey;
+import org.mozilla.javascript.Undefined;
+import org.mozilla.javascript.WrapFactory;
 
 /**
  * <code>NativeJavaMap</code> is a wrapper for java objects implementing <code>java.util.Map
