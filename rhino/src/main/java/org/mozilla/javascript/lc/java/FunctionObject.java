@@ -6,7 +6,7 @@
 
 // API class
 
-package org.mozilla.javascript;
+package org.mozilla.javascript.lc.java;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -14,6 +14,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import org.mozilla.javascript.*;
 import org.mozilla.javascript.commonjs.module.ModuleScope;
 import org.mozilla.javascript.lc.type.TypeInfo;
 import org.mozilla.javascript.lc.type.TypeInfoFactory;

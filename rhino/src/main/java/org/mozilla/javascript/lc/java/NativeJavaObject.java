@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.javascript;
+package org.mozilla.javascript.lc.java;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -18,6 +18,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
+import org.mozilla.javascript.*;
 import org.mozilla.javascript.lc.type.TypeInfo;
 import org.mozilla.javascript.lc.type.TypeInfoFactory;
 
@@ -35,7 +36,7 @@ public class NativeJavaObject implements Scriptable, SymbolScriptable, Wrapper, 
 
     private static final long serialVersionUID = -6948590651130498591L;
 
-    static void init(ScriptableObject scope, boolean sealed) {
+    public static void init(ScriptableObject scope, boolean sealed) {
         JavaIterableIterator.init(scope, sealed);
     }
 
@@ -494,7 +495,7 @@ public class NativeJavaObject implements Scriptable, SymbolScriptable, Wrapper, 
     }
 
     /** Type-munging for field setting and method invocation. Conforms to LC3 specification */
-    static Object coerceTypeImpl(TypeInfo type, Object value) {
+    public static Object coerceTypeImpl(TypeInfo type, Object value) {
         if (value != null && type.is(value.getClass())) {
             return value;
         }
@@ -989,7 +990,7 @@ public class NativeJavaObject implements Scriptable, SymbolScriptable, Wrapper, 
     static {
         // Reflection in java is verbose
         Class<?>[] sig2 = new Class[2];
-        Class<?> cl = Kit.classOrNull("org.mozilla.javascript.JavaAdapter");
+        Class<?> cl = Kit.classOrNull("org.mozilla.javascript.lc.java.JavaAdapter");
         if (cl != null) {
             try {
                 sig2[0] = ScriptRuntime.ObjectClass;

@@ -6,9 +6,10 @@
 
 // API class
 
-package org.mozilla.javascript;
+package org.mozilla.javascript.lc.java;
 
 import java.util.ArrayList;
+import org.mozilla.javascript.*;
 
 /**
  * Class ImporterTopLevel

@@ -3,12 +3,13 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-package org.mozilla.javascript;
+package org.mozilla.javascript.lc.java;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import org.mozilla.javascript.*;
 
 /**
  * <code>NativeJavaMap</code> is a wrapper for java objects implementing <code>java.util.Map
@@ -27,7 +28,7 @@ public class NativeJavaMap extends NativeJavaObject {
 
     private Map<Object, Object> map;
 
-    static void init(ScriptableObject scope, boolean sealed) {
+    public static void init(ScriptableObject scope, boolean sealed) {
         NativeJavaMapIterator.init(scope, sealed);
     }
 

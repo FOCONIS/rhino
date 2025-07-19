@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.javascript;
+package org.mozilla.javascript.lc.java;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Set;
 import org.mozilla.classfile.ByteCode;
 import org.mozilla.classfile.ClassFileWriter;
+import org.mozilla.javascript.*;
 
 public final class JavaAdapter implements IdFunctionCall {
     /**

@@ -4,13 +4,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.javascript;
+package org.mozilla.javascript.lc.java;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.concurrent.CopyOnWriteArrayList;
+import org.mozilla.javascript.*;
 import org.mozilla.javascript.lc.type.TypeInfoFactory;
 
 /**
@@ -89,7 +90,7 @@ public class NativeJavaMethod extends BaseFunction {
     }
 
     @Override
-    String decompile(int indent, EnumSet<DecompilerFlag> flags) {
+    protected String decompile(int indent, EnumSet<DecompilerFlag> flags) {
         StringBuilder sb = new StringBuilder();
         boolean justbody = flags.contains(DecompilerFlag.ONLY_BODY);
         if (!justbody) {

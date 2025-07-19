@@ -4,10 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.javascript;
+package org.mozilla.javascript.lc.java;
 
 import java.lang.reflect.Array;
 import java.util.Objects;
+import org.mozilla.javascript.*;
 
 /**
  * This class reflects Java arrays into the JavaScript environment.
@@ -64,7 +65,7 @@ public class NativeJavaArray extends NativeJavaObject implements SymbolScriptabl
     public Object get(String id, Scriptable start) {
         if (id.equals("length")) return Integer.valueOf(length);
         Object result = super.get(id, start);
-        if (result == NOT_FOUND && !ScriptableObject.hasProperty(getPrototype(), id)) {
+        if (result == Scriptable.NOT_FOUND && !ScriptableObject.hasProperty(getPrototype(), id)) {
             throw Context.reportRuntimeErrorById(
                     "msg.java.member.not.found", array.getClass().getName(), id);
         }

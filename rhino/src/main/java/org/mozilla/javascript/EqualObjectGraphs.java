@@ -18,6 +18,9 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import org.mozilla.javascript.debug.DebuggableObject;
+import org.mozilla.javascript.lc.java.JavaAdapter;
+import org.mozilla.javascript.lc.java.NativeJavaPackage;
+import org.mozilla.javascript.lc.java.NativeJavaTopPackage;
 
 /**
  * An object that implements deep equality test of objects, including their reference graph
