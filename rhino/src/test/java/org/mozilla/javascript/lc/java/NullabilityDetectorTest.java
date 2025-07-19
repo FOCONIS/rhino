@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.List;
 import org.junit.Test;
 import org.junit.jupiter.api.Assertions;
+import org.mozilla.javascript.MemberBox;
 import org.mozilla.javascript.NullabilityDetector.NullabilityAccessor;
 import org.mozilla.javascript.lc.type.TypeInfoFactory;
 

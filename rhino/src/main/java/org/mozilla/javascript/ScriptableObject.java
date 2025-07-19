@@ -13,27 +13,14 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.AccessibleObject;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Member;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import java.lang.reflect.*;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import org.mozilla.javascript.ScriptRuntime.StringIdOrIndex;
-import org.mozilla.javascript.annotations.JSFunction;
-import org.mozilla.javascript.annotations.JSGetter;
-import org.mozilla.javascript.annotations.JSSetter;
-import org.mozilla.javascript.annotations.JSStaticFunction;
+import org.mozilla.javascript.annotations.*;
 import org.mozilla.javascript.debug.DebuggableObject;
-import org.mozilla.javascript.lc.java.FunctionObject;
+import org.mozilla.javascript.lc.type.TypeInfoFactory;
 
 /**
  * This is the default implementation of the Scriptable interface. This class provides convenient
@@ -972,7 +959,7 @@ public abstract class ScriptableObject extends SlotMapOwner
      * @exception InvocationTargetException if an exception is thrown during execution of methods of
      *     the named class
      * @see org.mozilla.javascript.Function
-     * @see FunctionObject
+     * @see org.mozilla.javascript.FunctionObject
      * @see org.mozilla.javascript.ScriptableObject#READONLY
      * @see org.mozilla.javascript.ScriptableObject #defineProperty(String, Class, int)
      */
@@ -1040,7 +1027,6 @@ public abstract class ScriptableObject extends SlotMapOwner
     static <T extends Scriptable> BaseFunction buildClassCtor(
             Scriptable scope, Class<T> clazz, boolean sealed, boolean mapInheritance)
             throws IllegalAccessException, InstantiationException, InvocationTargetException {
-        /* TODO
         Method[] methods = FunctionObject.getMethodList(clazz);
         for (Method method : methods) {
             if (!method.getName().equals("init")) continue;
@@ -1236,7 +1222,6 @@ public abstract class ScriptableObject extends SlotMapOwner
             if (sealed) {
                 f.sealObject();
             }
-
         }
 
         // Call user code to complete initialization if necessary.
@@ -1254,8 +1239,6 @@ public abstract class ScriptableObject extends SlotMapOwner
         }
 
         return ctor;
-           */
-        return null;
     }
 
     private static Member findAnnotatedMember(
@@ -1431,7 +1414,6 @@ public abstract class ScriptableObject extends SlotMapOwner
      * @see org.mozilla.javascript.Scriptable#put(String, Scriptable, Object)
      */
     public void defineProperty(String propertyName, Class<?> clazz, int attributes) {
-        /* TODO
         int length = propertyName.length();
         if (length == 0) throw new IllegalArgumentException();
         char[] buf = new char[3 + length];
@@ -1449,8 +1431,6 @@ public abstract class ScriptableObject extends SlotMapOwner
         Method setter = FunctionObject.findSingleMethod(methods, setterName);
         if (setter == null) attributes |= ScriptableObject.READONLY;
         defineProperty(propertyName, null, getter, setter == null ? null : setter, attributes);
-
-         */
     }
 
     /**
@@ -1502,96 +1482,95 @@ public abstract class ScriptableObject extends SlotMapOwner
      */
     public void defineProperty(
             String propertyName, Object delegateTo, Method getter, Method setter, int attributes) {
-        /* TODO
-           MemberBox getterBox = null;
-           if (getter != null) {
-               getterBox = new MemberBox(getter, TypeInfoFactory.get(this));
 
-               boolean delegatedForm;
-               if (!Modifier.isStatic(getter.getModifiers())) {
-                   delegatedForm = (delegateTo != null);
-                   getterBox.delegateTo = delegateTo;
-               } else {
-                   delegatedForm = true;
-                   // Ignore delegateTo for static getter but store
-                   // non-null delegateTo indicator.
-                   getterBox.delegateTo = Void.TYPE;
-               }
+        MemberBox getterBox = null;
+        if (getter != null) {
+            getterBox = new MemberBox(getter, TypeInfoFactory.get(this));
 
-               String errorId = null;
-               Class<?>[] parmTypes = getter.getParameterTypes();
-               if (parmTypes.length == 0) {
-                   if (delegatedForm) {
-                       errorId = "msg.obj.getter.parms";
-                   }
-               } else if (parmTypes.length == 1) {
-                   Object argType = parmTypes[0];
-                   // Allow ScriptableObject for compatibility
-                   if (!(argType == ScriptRuntime.ScriptableClass
-                           || argType == ScriptRuntime.ScriptableObjectClass)) {
-                       errorId = "msg.bad.getter.parms";
-                   } else if (!delegatedForm) {
-                       errorId = "msg.bad.getter.parms";
-                   }
-               } else {
-                   errorId = "msg.bad.getter.parms";
-               }
-               if (errorId != null) {
-                   throw Context.reportRuntimeErrorById(errorId, getter.toString());
-               }
-           }
+            boolean delegatedForm;
+            if (!Modifier.isStatic(getter.getModifiers())) {
+                delegatedForm = (delegateTo != null);
+                getterBox.delegateTo = delegateTo;
+            } else {
+                delegatedForm = true;
+                // Ignore delegateTo for static getter but store
+                // non-null delegateTo indicator.
+                getterBox.delegateTo = Void.TYPE;
+            }
 
-           MemberBox setterBox = null;
-           if (setter != null) {
-               if (setter.getReturnType() != Void.TYPE)
-                   throw Context.reportRuntimeErrorById("msg.setter.return", setter.toString());
+            String errorId = null;
+            Class<?>[] parmTypes = getter.getParameterTypes();
+            if (parmTypes.length == 0) {
+                if (delegatedForm) {
+                    errorId = "msg.obj.getter.parms";
+                }
+            } else if (parmTypes.length == 1) {
+                Object argType = parmTypes[0];
+                // Allow ScriptableObject for compatibility
+                if (!(argType == ScriptRuntime.ScriptableClass
+                        || argType == ScriptRuntime.ScriptableObjectClass)) {
+                    errorId = "msg.bad.getter.parms";
+                } else if (!delegatedForm) {
+                    errorId = "msg.bad.getter.parms";
+                }
+            } else {
+                errorId = "msg.bad.getter.parms";
+            }
+            if (errorId != null) {
+                throw Context.reportRuntimeErrorById(errorId, getter.toString());
+            }
+        }
 
-               setterBox = new MemberBox(setter, TypeInfoFactory.get(this));
+        MemberBox setterBox = null;
+        if (setter != null) {
+            if (setter.getReturnType() != Void.TYPE)
+                throw Context.reportRuntimeErrorById("msg.setter.return", setter.toString());
 
-               boolean delegatedForm;
-               if (!Modifier.isStatic(setter.getModifiers())) {
-                   delegatedForm = (delegateTo != null);
-                   setterBox.delegateTo = delegateTo;
-               } else {
-                   delegatedForm = true;
-                   // Ignore delegateTo for static setter but store
-                   // non-null delegateTo indicator.
-                   setterBox.delegateTo = Void.TYPE;
-               }
+            setterBox = new MemberBox(setter, TypeInfoFactory.get(this));
 
-               String errorId = null;
-               Class<?>[] parmTypes = setter.getParameterTypes();
-               if (parmTypes.length == 1) {
-                   if (delegatedForm) {
-                       errorId = "msg.setter2.expected";
-                   }
-               } else if (parmTypes.length == 2) {
-                   Object argType = parmTypes[0];
-                   // Allow ScriptableObject for compatibility
-                   if (!(argType == ScriptRuntime.ScriptableClass
-                           || argType == ScriptRuntime.ScriptableObjectClass)) {
-                       errorId = "msg.setter2.parms";
-                   } else if (!delegatedForm) {
-                       errorId = "msg.setter1.parms";
-                   }
-               } else {
-                   errorId = "msg.setter.parms";
-               }
-               if (errorId != null) {
-                   throw Context.reportRuntimeErrorById(errorId, setter.toString());
-               }
-           }
+            boolean delegatedForm;
+            if (!Modifier.isStatic(setter.getModifiers())) {
+                delegatedForm = (delegateTo != null);
+                setterBox.delegateTo = delegateTo;
+            } else {
+                delegatedForm = true;
+                // Ignore delegateTo for static setter but store
+                // non-null delegateTo indicator.
+                setterBox.delegateTo = Void.TYPE;
+            }
 
-           AccessorSlot aSlot =
-                   getMap().compute(this, propertyName, 0, ScriptableObject::ensureAccessorSlot);
-           aSlot.setAttributes(attributes);
-           if (getterBox != null) {
-               aSlot.getter = new AccessorSlot.MemberBoxGetter(getterBox);
-           }
-           if (setterBox != null) {
-               aSlot.setter = new AccessorSlot.MemberBoxSetter(setterBox);
-           }
-        */
+            String errorId = null;
+            Class<?>[] parmTypes = setter.getParameterTypes();
+            if (parmTypes.length == 1) {
+                if (delegatedForm) {
+                    errorId = "msg.setter2.expected";
+                }
+            } else if (parmTypes.length == 2) {
+                Object argType = parmTypes[0];
+                // Allow ScriptableObject for compatibility
+                if (!(argType == ScriptRuntime.ScriptableClass
+                        || argType == ScriptRuntime.ScriptableObjectClass)) {
+                    errorId = "msg.setter2.parms";
+                } else if (!delegatedForm) {
+                    errorId = "msg.setter1.parms";
+                }
+            } else {
+                errorId = "msg.setter.parms";
+            }
+            if (errorId != null) {
+                throw Context.reportRuntimeErrorById(errorId, setter.toString());
+            }
+        }
+
+        AccessorSlot aSlot =
+                getMap().compute(this, propertyName, 0, ScriptableObject::ensureAccessorSlot);
+        aSlot.setAttributes(attributes);
+        if (getterBox != null) {
+            aSlot.getter = new AccessorSlot.MemberBoxGetter(getterBox);
+        }
+        if (setterBox != null) {
+            aSlot.setter = new AccessorSlot.MemberBoxSetter(setterBox);
+        }
     }
 
     /**
@@ -2099,7 +2078,6 @@ public abstract class ScriptableObject extends SlotMapOwner
      * @see FunctionObject
      */
     public void defineFunctionProperties(String[] names, Class<?> clazz, int attributes) {
-        /* TODO
         Method[] methods = FunctionObject.getMethodList(clazz);
         for (String name : names) {
             Method m = FunctionObject.findSingleMethod(methods, name);
@@ -2109,7 +2087,6 @@ public abstract class ScriptableObject extends SlotMapOwner
             FunctionObject f = new FunctionObject(name, m, this);
             defineProperty(name, f, attributes);
         }
-         */
     }
 
     /**

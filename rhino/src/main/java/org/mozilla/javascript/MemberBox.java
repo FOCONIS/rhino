@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.javascript.lc.java;
+package org.mozilla.javascript;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -17,7 +17,6 @@ import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.List;
-import org.mozilla.javascript.*;
 import org.mozilla.javascript.lc.type.TypeInfo;
 import org.mozilla.javascript.lc.type.TypeInfoFactory;
 
@@ -27,7 +26,7 @@ import org.mozilla.javascript.lc.type.TypeInfoFactory;
  *
  * @author Igor Bukanov
  */
-final class MemberBox implements Serializable {
+public final class MemberBox implements Serializable {
     private static final long serialVersionUID = 6358550398665688245L;
 
     private transient Member memberObject;
@@ -43,11 +42,11 @@ final class MemberBox implements Serializable {
     private static final NullabilityDetector nullDetector =
             ScriptRuntime.loadOneServiceImplementation(NullabilityDetector.class);
 
-    MemberBox(Method method, TypeInfoFactory factory) {
+    public MemberBox(Method method, TypeInfoFactory factory) {
         init(method, factory);
     }
 
-    MemberBox(Constructor<?> constructor, TypeInfoFactory factory) {
+    public MemberBox(Constructor<?> constructor, TypeInfoFactory factory) {
         init(constructor, factory);
     }
 
@@ -71,7 +70,7 @@ final class MemberBox implements Serializable {
         this.returnTypeInfo = TypeInfo.NONE;
     }
 
-    Method method() {
+    public Method method() {
         return (Method) memberObject;
     }
 
@@ -83,32 +82,40 @@ final class MemberBox implements Serializable {
         return memberObject;
     }
 
-    boolean isMethod() {
+    public boolean isMethod() {
         return memberObject instanceof Method;
     }
 
-    boolean isCtor() {
+    public boolean isCtor() {
         return memberObject instanceof Constructor;
     }
 
-    boolean isStatic() {
+    public boolean isStatic() {
         return Modifier.isStatic(memberObject.getModifiers());
     }
 
-    boolean isPublic() {
+    public boolean isPublic() {
         return Modifier.isPublic(memberObject.getModifiers());
     }
 
-    String getName() {
+    public boolean isVararg() {
+        return vararg;
+    }
+
+    public String getName() {
         return memberObject.getName();
     }
 
-    Class<?> getDeclaringClass() {
+    public Class<?> getDeclaringClass() {
         return memberObject.getDeclaringClass();
     }
 
-    List<TypeInfo> getArgTypes() {
+    public List<TypeInfo> getArgTypes() {
         return argTypeInfos;
+    }
+
+    public Object getDelegateTo() {
+        return delegateTo;
     }
 
     public NullabilityDetector.NullabilityAccessor getArgNullability() {
@@ -126,11 +133,11 @@ final class MemberBox implements Serializable {
         return got;
     }
 
-    TypeInfo getReturnType() {
+    public TypeInfo getReturnType() {
         return returnTypeInfo;
     }
 
-    String toJavaDeclaration() {
+    public String toJavaDeclaration() {
         StringBuilder sb = new StringBuilder();
         if (isMethod()) {
             Method method = method();
@@ -146,7 +153,7 @@ final class MemberBox implements Serializable {
             }
             sb.append(name);
         }
-        sb.append(JavaMembers.liveConnectSignature(getArgTypes()));
+        // TODO  sb.append(JavaMembers.liveConnectSignature(getArgTypes()));
         return sb.toString();
     }
 
@@ -155,18 +162,18 @@ final class MemberBox implements Serializable {
         return memberObject.toString();
     }
 
-    boolean isSameGetterFunction(Object function) {
+    public boolean isSameGetterFunction(Object function) {
         var f = asGetterFunction == null ? Undefined.instance : asGetterFunction;
         return ScriptRuntime.shallowEq(function, f);
     }
 
-    boolean isSameSetterFunction(Object function) {
+    public boolean isSameSetterFunction(Object function) {
         var f = asSetterFunction == null ? Undefined.instance : asSetterFunction;
         return ScriptRuntime.shallowEq(function, f);
     }
 
     /** Function returned by calls to __lookupGetter__ */
-    Function asGetterFunction(final String name, final Scriptable scope) {
+    public Function asGetterFunction(final String name, final Scriptable scope) {
         // Note: scope is the scriptable this function is related to; therefore this function
         // is constant for this member box.
         // Because of this we can cache the function in the attribute
@@ -202,7 +209,7 @@ final class MemberBox implements Serializable {
     }
 
     /** Function returned by calls to __lookupSetter__ */
-    Function asSetterFunction(final String name, final Scriptable scope) {
+    public Function asSetterFunction(final String name, final Scriptable scope) {
         // Note: scope is the scriptable this function is related to; therefore this function
         // is constant for this member box.
         // Because of this we can cache the function in the attribute
@@ -246,7 +253,7 @@ final class MemberBox implements Serializable {
         return asSetterFunction;
     }
 
-    Object invoke(Object target, Object[] args) {
+    public Object invoke(Object target, Object[] args) {
         Method method = method();
 
         // handle delegators
@@ -295,7 +302,7 @@ final class MemberBox implements Serializable {
         }
     }
 
-    Object newInstance(Object[] args) {
+    public Object newInstance(Object[] args) {
         Constructor<?> ctor = ctor();
         try {
             try {
