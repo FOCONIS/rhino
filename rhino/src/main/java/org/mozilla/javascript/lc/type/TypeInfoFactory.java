@@ -129,9 +129,11 @@ public interface TypeInfoFactory extends Serializable {
      *
      * @see TypeInfo#consolidate(Map)
      */
-    default Map<VariableTypeInfo, TypeInfo> getConsolidationMapping(Class<?> from) {
-        return Map.of();
+    default Map<VariableTypeInfo, TypeInfo> getConsolidationMapping(Type from) {
+        return getConsolidationMapping(create(from));
     }
+
+    Map<VariableTypeInfo, TypeInfo> getConsolidationMapping(TypeInfo from);
 
     /// helpers
 

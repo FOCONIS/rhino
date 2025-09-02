@@ -5,8 +5,10 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 import java.util.List;
+import java.util.Map;
 import org.mozilla.javascript.lc.type.TypeInfo;
 import org.mozilla.javascript.lc.type.TypeInfoFactory;
+import org.mozilla.javascript.lc.type.VariableTypeInfo;
 
 /**
  * @author ZZZank
@@ -48,6 +50,11 @@ enum AlwaysFailFactory implements TypeInfoFactory {
 
     @Override
     public TypeInfo attachParam(TypeInfo base, List<TypeInfo> params) {
+        throw new AssertionError(MESSAGE);
+    }
+
+    @Override
+    public Map<VariableTypeInfo, TypeInfo> getConsolidationMapping(TypeInfo from) {
         throw new AssertionError(MESSAGE);
     }
 }

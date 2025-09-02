@@ -74,24 +74,24 @@ public interface FactoryBase extends TypeInfoFactory {
         return transformed;
     }
 
-    /** Used by {@link #getConsolidationMapping(java.lang.Class)} */
-    default Map<VariableTypeInfo, TypeInfo> computeConsolidationMapping(Class<?> type) {
+    /** Used by {@link #getConsolidationMapping(TypeInfo)} */
+    default Map<VariableTypeInfo, TypeInfo> computeConsolidationMapping(TypeInfo type) {
         var mapping = new HashMap<VariableTypeInfo, TypeInfo>();
 
         // in our E.class example, this will collect mapping from B<Te>, forming Tb -> Te
-        extractSuperMapping(type.getGenericSuperclass(), mapping);
+        extractSuperMapping(type.asClass().getGenericSuperclass(), mapping);
 
         // in our E.class example, this will collect mapping from D<String>, forming Td -> String
-        for (var genericInterface : type.getGenericInterfaces()) {
+        for (var genericInterface : type.asClass().getGenericInterfaces()) {
             extractSuperMapping(genericInterface, mapping);
         }
 
         // extract mappings for superclasses/interfaces
         // in our E.class example, super mapping will include Ta -> Tb
-        var superMapping = getConsolidationMapping(type.getSuperclass());
+        var superMapping = getConsolidationMapping(type.asClass().getSuperclass());
 
         // in our E.class example, interface mapping will include Tc -> Td
-        var interfaces = type.getInterfaces();
+        var interfaces = type.asClass().getInterfaces();
         var interfaceMappings = new ArrayList<Map<VariableTypeInfo, TypeInfo>>(interfaces.length);
         for (var interface_ : interfaces) {
             interfaceMappings.add(getConsolidationMapping(interface_));

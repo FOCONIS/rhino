@@ -48,8 +48,8 @@ public enum NoCacheFactory implements FactoryBase {
     }
 
     @Override
-    public Map<VariableTypeInfo, TypeInfo> getConsolidationMapping(Class<?> from) {
-        if (from == null || from == Object.class || from.isPrimitive()) {
+    public Map<VariableTypeInfo, TypeInfo> getConsolidationMapping(TypeInfo from) {
+        if (from == null || from.isObjectExact() || from.isPrimitive() || !from.shouldConvert()) {
             return Map.of();
         }
         return computeConsolidationMapping(from);

@@ -46,7 +46,7 @@ class NoGenericNoCacheFactory implements FactoryBase {
     }
 
     @Override
-    public Map<VariableTypeInfo, TypeInfo> getConsolidationMapping(Class<?> from) {
+    public Map<VariableTypeInfo, TypeInfo> getConsolidationMapping(TypeInfo from) {
         return Map.of();
     }
 }
