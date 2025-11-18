@@ -86,7 +86,7 @@ public class SecurityControllerTest {
             runScript(script, RESTRICT_IMPL_ACCESS);
             fail("EcmaError expected");
         } catch (EcmaError ee) {
-            assertEquals("TypeError: Cannot find function bar in object []. (#4)", ee.getMessage());
+            assertEquals("TypeError: Cannot find function bar in object []. (line #4)", ee.getMessage());
         }
 
         // try in allowed scope again

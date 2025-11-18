@@ -179,7 +179,7 @@ public class GenericAccessTest extends TestCase {
                         + "} catch (e) { e.toString() }";
         testIt(
                 js,
-                "InternalError: Cannot convert foo to java.lang.Integer (GenericAccessTest.js#2)");
+                "InternalError: Cannot convert foo to java.lang.Integer (GenericAccessTest.js line #2)");
     }
 
     @Test

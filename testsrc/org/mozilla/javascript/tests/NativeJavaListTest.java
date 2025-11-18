@@ -158,21 +158,21 @@ public class NativeJavaListTest {
             runScriptAsString("value.length = -10", list);
             fail();
         } catch (EcmaError e) {
-            assertEquals("RangeError: Inappropriate array length. (#1)", e.getMessage());
+            assertEquals("RangeError: Inappropriate array length. (line #1)", e.getMessage());
         }
 
         try {
             runScriptAsString("value.length = 2.1", list);
             fail();
         } catch (EcmaError e) {
-            assertEquals("RangeError: Inappropriate array length. (#1)", e.getMessage());
+            assertEquals("RangeError: Inappropriate array length. (line #1)", e.getMessage());
         }
 
         try {
             runScriptAsString("value.length = 2147483648", list); // Integer.MAX_VALUE + 1
             fail();
         } catch (EcmaError e) {
-            assertEquals("RangeError: Inappropriate array length. (#1)", e.getMessage());
+            assertEquals("RangeError: Inappropriate array length. (line #1)", e.getMessage());
         }
     }
 

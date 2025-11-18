@@ -58,7 +58,7 @@ public class RegexpTest {
             cx.evaluateString(scope, "/abc/o;", "test", 1, null);
             fail("EvaluatorException expected");
         } catch (EvaluatorException e) {
-            assertEquals("invalid flag 'o' after regular expression (test#1)", e.getMessage());
+            assertEquals("invalid flag 'o' after regular expression (test line #1)", e.getMessage());
         }
     }
 
@@ -69,7 +69,7 @@ public class RegexpTest {
             fail("EcmaError expected");
         } catch (EcmaError e) {
             assertEquals(
-                    "SyntaxError: invalid flag 'o' after regular expression (test#1)",
+                    "SyntaxError: invalid flag 'o' after regular expression (test line #1)",
                     e.getMessage());
         }
     }

@@ -40,7 +40,10 @@ public abstract class RhinoException extends RuntimeException {
         buf.append(" (");
         buf.append(sourceName);
         if (lineNumber > 0) {
-            buf.append('#');
+			if(!sourceName.isEmpty()) {
+				buf.append(' ');
+			}
+            buf.append("line #");
             buf.append(lineNumber);
         }
         buf.append(')');

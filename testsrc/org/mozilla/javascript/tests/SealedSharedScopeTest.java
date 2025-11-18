@@ -174,7 +174,7 @@ public class SealedSharedScopeTest {
             evaluateString(scope2, "Locale.getDefault()");
             fail("EcmaError expected");
         } catch (EcmaError e) {
-            assertEquals("ReferenceError: \"Locale\" is not defined. (test#1)", e.getMessage());
+            assertEquals("ReferenceError: \"Locale\" is not defined. (test line #1)", e.getMessage());
         }
     }
 }

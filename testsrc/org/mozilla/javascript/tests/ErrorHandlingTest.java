@@ -38,13 +38,13 @@ public class ErrorHandlingTest {
                 "throw new Error('foo')",
                 e -> {
                     Assert.assertEquals(JavaScriptException.class, e.getClass());
-                    Assert.assertEquals("Error: foo (myScript.js#1)", e.getMessage());
+                    Assert.assertEquals("Error: foo (myScript.js line #1)", e.getMessage());
                 });
         testIt(
                 "try { throw new Error('foo') } catch (e) { throw e }",
                 e -> {
                     Assert.assertEquals(JavaScriptException.class, e.getClass());
-                    Assert.assertEquals("Error: foo (myScript.js#1)", e.getMessage());
+                    Assert.assertEquals("Error: foo (myScript.js line #1)", e.getMessage());
                 });
     }
 
@@ -56,7 +56,7 @@ public class ErrorHandlingTest {
                 e -> {
                     Assert.assertEquals(WrappedException.class, e.getClass());
                     Assert.assertEquals(
-                            "Wrapped java.lang.RuntimeException: foo (myScript.js#1)",
+                            "Wrapped java.lang.RuntimeException: foo (myScript.js line #1)",
                             e.getMessage());
                     Assert.assertEquals(RuntimeException.class, e.getCause().getClass());
                     Assert.assertEquals("foo", e.getCause().getMessage());
@@ -67,7 +67,7 @@ public class ErrorHandlingTest {
                 e -> {
                     Assert.assertEquals(JavaScriptException.class, e.getClass());
                     Assert.assertEquals(
-                            "JavaException: java.lang.RuntimeException: foo (myScript.js#1)",
+                            "JavaException: java.lang.RuntimeException: foo (myScript.js line #1)",
                             e.getMessage());
                     Assert.assertEquals(RuntimeException.class, e.getCause().getClass());
                     Assert.assertEquals("foo", e.getCause().getMessage());
@@ -83,7 +83,7 @@ public class ErrorHandlingTest {
                 e -> {
                     Assert.assertEquals(JavaScriptException.class, e.getClass());
                     Assert.assertEquals(
-                            "java.lang.RuntimeException: foo (myScript.js#1)", e.getMessage());
+                            "java.lang.RuntimeException: foo (myScript.js line #1)", e.getMessage());
                     Assert.assertEquals(RuntimeException.class, e.getCause().getClass());
                     Assert.assertEquals("foo", e.getCause().getMessage());
                 });
@@ -92,7 +92,7 @@ public class ErrorHandlingTest {
                 e -> {
                     Assert.assertEquals(JavaScriptException.class, e.getClass());
                     Assert.assertEquals(
-                            "java.lang.RuntimeException: foo (myScript.js#1)", e.getMessage());
+                            "java.lang.RuntimeException: foo (myScript.js line #1)", e.getMessage());
                     Assert.assertEquals(RuntimeException.class, e.getCause().getClass());
                     Assert.assertEquals("foo", e.getCause().getMessage());
                 });
