@@ -114,10 +114,13 @@ class JavaMembers {
             throw Context.throwAsScriptRuntimeEx(ex);
         }
         var type = field.type();
+        var typeFactory = TypeInfoFactory.getOrElse(scope, TypeInfoFactory.GLOBAL);
         if (scope instanceof NativeJavaObject) {
-            type =
-                    TypeInfoFactory.GLOBAL.consolidateType(
-                            type, ((NativeJavaObject) scope).staticType);
+            var wrapped = (NativeJavaObject) scope;
+            if (wrapped.javaObject != null) {
+                type = type.consolidate(typeFactory.getConsolidationMapping(wrapped.javaObject.getClass()));
+            }
+            type = typeFactory.consolidateType(type, wrapped.staticType);
         }
         // Need to wrap the object before we return it.
         return cx.getWrapFactory().wrap(cx, ScriptableObject.getTopLevelScope(scope), got, type);
@@ -150,10 +153,13 @@ class JavaMembers {
         } else if (member instanceof NativeJavaField) {
             var field = (NativeJavaField) member;
             var type = field.type();
+            var typeFactory = TypeInfoFactory.getOrElse(scope, TypeInfoFactory.GLOBAL);
             if (scope instanceof NativeJavaObject) {
-                type =
-                        TypeInfoFactory.GLOBAL.consolidateType(
-                                type, ((NativeJavaObject) scope).staticType);
+                var wrapped = (NativeJavaObject) scope;
+                if (wrapped.javaObject != null) {
+                    type = type.consolidate(typeFactory.getConsolidationMapping(wrapped.javaObject.getClass()));
+                }
+                type = typeFactory.consolidateType(type, wrapped.staticType);
             }
             try {
                 field.set(javaObject, Context.jsToJava(value, type));

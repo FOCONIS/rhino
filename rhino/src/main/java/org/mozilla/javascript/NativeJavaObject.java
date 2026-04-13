@@ -18,6 +18,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
+import org.mozilla.javascript.lc.type.ParameterizedTypeInfo;
 import org.mozilla.javascript.lc.type.TypeInfo;
 import org.mozilla.javascript.lc.type.TypeInfoFactory;
 
@@ -63,6 +64,13 @@ public class NativeJavaObject implements Scriptable, SymbolScriptable, Wrapper, 
         }
         members = JavaMembers.lookupClass(parent, dynamicType, staticType.asClass(), isAdapter);
         fieldAndMethods = members.getFieldAndMethodsObjects(this, javaObject, false);
+    }
+
+    protected TypeInfo consolidateType(TypeInfo type, TypeInfoFactory typeFactory) {
+        if (javaObject != null) {
+            type = type.consolidate(typeFactory.getConsolidationMapping(javaObject.getClass()));
+        }
+        return typeFactory.consolidateType(type, staticType);
     }
 
     @Override
@@ -292,14 +300,18 @@ public class NativeJavaObject implements Scriptable, SymbolScriptable, Wrapper, 
 
         switch (fromCode) {
             case JSTYPE_UNDEFINED:
-                if (to == TypeInfo.STRING || to.isObjectExact()) {
+                if (to == TypeInfo.STRING) {
                     return 1;
+                } else if (to.isObjectExact()) {
+                    return 2;
                 }
                 break;
 
             case JSTYPE_NULL:
-                if (!to.isPrimitive()) {
+                if (to == TypeInfo.STRING || to.isObjectExact()) {
                     return 1;
+                } else if (!to.isPrimitive()) {
+                    return 2;
                 }
                 break;
 
@@ -874,11 +886,7 @@ public class NativeJavaObject implements Scriptable, SymbolScriptable, Wrapper, 
             out.writeObject(javaObject);
         }
 
-        if (staticType != TypeInfo.NONE) {
-            out.writeObject(staticType.asClass().getName());
-        } else {
-            out.writeObject(null);
-        }
+        out.writeObject(SerializedTypeInfo.from(staticType));
     }
 
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
@@ -897,9 +905,14 @@ public class NativeJavaObject implements Scriptable, SymbolScriptable, Wrapper, 
             javaObject = in.readObject();
         }
 
-        String className = (String) in.readObject();
-        if (className != null) {
-            staticType = TypeInfoFactory.GLOBAL.create(Class.forName(className));
+        Object restoredType = in.readObject();
+        if (restoredType instanceof SerializedTypeInfo) {
+            staticType = ((SerializedTypeInfo) restoredType).toTypeInfo(TypeInfoFactory.GLOBAL);
+        } else if (restoredType instanceof TypeInfo) {
+            staticType = (TypeInfo) restoredType;
+        } else if (restoredType instanceof String) {
+            // Backward compatibility with older serialization format.
+            staticType = TypeInfoFactory.GLOBAL.create(Class.forName((String) restoredType));
         } else {
             staticType = TypeInfo.NONE;
         }
@@ -962,6 +975,60 @@ public class NativeJavaObject implements Scriptable, SymbolScriptable, Wrapper, 
         }
 
         private Iterator iterator;
+    }
+
+    private static final class SerializedTypeInfo implements Serializable {
+        private static final long serialVersionUID = 1L;
+
+        private final boolean none;
+        private final Class<?> rawClass;
+        private final SerializedTypeInfo component;
+        private final SerializedTypeInfo[] params;
+
+        private SerializedTypeInfo(
+                boolean none, Class<?> rawClass, SerializedTypeInfo component, SerializedTypeInfo[] params) {
+            this.none = none;
+            this.rawClass = rawClass;
+            this.component = component;
+            this.params = params;
+        }
+
+        private static SerializedTypeInfo from(TypeInfo type) {
+            if (type == null || type == TypeInfo.NONE) {
+                return new SerializedTypeInfo(true, null, null, null);
+            }
+            if (type.isArray()) {
+                return new SerializedTypeInfo(false, null, from(type.getComponentType()), null);
+            }
+            if (type instanceof ParameterizedTypeInfo) {
+                var p = (ParameterizedTypeInfo) type;
+                var paramList = p.params();
+                var serialized = new SerializedTypeInfo[paramList.size()];
+                for (int i = 0; i < paramList.size(); i++) {
+                    serialized[i] = from(paramList.get(i));
+                }
+                return new SerializedTypeInfo(false, p.rawType().asClass(), null, serialized);
+            }
+            return new SerializedTypeInfo(false, type.asClass(), null, null);
+        }
+
+        private TypeInfo toTypeInfo(TypeInfoFactory factory) {
+            if (none) {
+                return TypeInfo.NONE;
+            }
+            if (component != null) {
+                return factory.toArray(component.toTypeInfo(factory));
+            }
+            TypeInfo base = factory.create(rawClass);
+            if (params == null || params.length == 0) {
+                return base;
+            }
+            var resolved = new TypeInfo[params.length];
+            for (int i = 0; i < params.length; i++) {
+                resolved[i] = params[i].toTypeInfo(factory);
+            }
+            return factory.attachParam(base, resolved);
+        }
     }
 
     /** The prototype of this object. */

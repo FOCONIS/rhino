@@ -219,7 +219,10 @@ public class InterfaceAdapter {
                 }
             }
         }
-        Scriptable thisObj = wf.wrapAsJavaObject(cx, topScope, thisObject, TypeInfo.NONE);
+        Scriptable thisObj =
+                (target instanceof Callable)
+                        ? wf.wrapAsJavaObject(cx, topScope, thisObject, TypeInfo.NONE)
+                        : (Scriptable) target;
 
         Object result = function.call(cx, topScope, thisObj, args);
         Class<?> javaResultType = method.getReturnType();

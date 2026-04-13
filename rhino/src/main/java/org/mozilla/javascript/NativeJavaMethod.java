@@ -7,8 +7,11 @@
 package org.mozilla.javascript;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.TypeVariable;
 import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import org.mozilla.javascript.lc.type.ParameterizedTypeInfo;
@@ -143,11 +146,55 @@ public class NativeJavaMethod extends BaseFunction {
 
         Map<VariableTypeInfo, TypeInfo> mapping = Map.of();
         if (thisObj instanceof NativeJavaObject) {
-            var staticType = ((NativeJavaObject) thisObj).staticType;
+            var wrapped = (NativeJavaObject) thisObj;
+            var typeFactory = TypeInfoFactory.get(scope);
+            var wrappedValue = wrapped.unwrap();
+            if (wrappedValue != null) {
+                mapping = new HashMap<>(typeFactory.getConsolidationMapping(wrappedValue.getClass()));
+            }
+            var staticType = wrapped.staticType;
             if (staticType instanceof ParameterizedTypeInfo) {
-                mapping =
-                        ((ParameterizedTypeInfo) staticType)
-                                .extractConsolidationMapping(TypeInfoFactory.get(scope));
+                var parameterized = (ParameterizedTypeInfo) staticType;
+                var staticMapping = parameterized.extractConsolidationMapping(typeFactory);
+                mapping = new HashMap<>(TypeInfoFactory.transformMapping(mapping, staticMapping));
+                mapping.putAll(staticMapping);
+
+                if (wrappedValue != null && parameterized.asClass().isAssignableFrom(wrappedValue.getClass())) {
+                    TypeVariable<?>[] dynamicTypeParams = wrappedValue.getClass().getTypeParameters();
+                    var staticParams = parameterized.params();
+                    if (dynamicTypeParams.length == staticParams.size()) {
+                        for (int i = 0; i < dynamicTypeParams.length; i++) {
+                            mapping.put(
+                                    (VariableTypeInfo) typeFactory.create(dynamicTypeParams[i]),
+                                    staticParams.get(i));
+                        }
+                    } else if (dynamicTypeParams.length == 1
+                            && List.class.isAssignableFrom(parameterized.asClass())
+                            && !staticParams.isEmpty()) {
+                        mapping.put(
+                                (VariableTypeInfo) typeFactory.create(dynamicTypeParams[0]),
+                                staticParams.get(0));
+                    } else if (dynamicTypeParams.length >= 2
+                            && Map.class.isAssignableFrom(parameterized.asClass())
+                            && staticParams.size() >= 2) {
+                        mapping.put(
+                                (VariableTypeInfo) typeFactory.create(dynamicTypeParams[0]),
+                                staticParams.get(0));
+                        mapping.put(
+                                (VariableTypeInfo) typeFactory.create(dynamicTypeParams[1]),
+                                staticParams.get(1));
+                    }
+                }
+            }
+            if (!mapping.isEmpty()) {
+                for (int i = 0; i < 8; i++) {
+                    var transformed = TypeInfoFactory.transformMapping(mapping, mapping);
+                    if (transformed.equals(mapping)) {
+                        break;
+                    }
+                    mapping = new HashMap<>(transformed);
+                }
+                mapping = Map.copyOf(mapping);
             }
         }
         args = meth.wrapArgsInternal(args, mapping);
@@ -423,6 +470,15 @@ public class NativeJavaMethod extends BaseFunction {
                 continue;
             }
             final var arg = args[j];
+            if (arg == Undefined.instance || arg == null) {
+                if (type1 == TypeInfo.STRING && type2.isObjectExact()) {
+                    totalPreference |= PREFERENCE_FIRST_ARG;
+                    continue;
+                } else if (type2 == TypeInfo.STRING && type1.isObjectExact()) {
+                    totalPreference |= PREFERENCE_SECOND_ARG;
+                    continue;
+                }
+            }
 
             // Determine which of type1, type2 is easier to convert from arg.
 

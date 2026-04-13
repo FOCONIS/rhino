@@ -7,6 +7,7 @@
 package org.mozilla.javascript;
 
 import java.io.Serializable;
+import java.lang.reflect.Type;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -25,6 +26,7 @@ public class ClassCache implements Serializable {
     private transient volatile Map<CacheKey, JavaMembers> classTable;
     private transient volatile Map<JavaAdapter.JavaAdapterSignature, Class<?>> classAdapterCache;
     private transient volatile Map<Class<?>, Object> interfaceAdapterCache;
+    private transient volatile Map<Type, JavaTypeInfo> typeCache;
     private int generatedClassSerial;
     private Scriptable associatedScope;
 
@@ -115,6 +117,7 @@ public class ClassCache implements Serializable {
         classTable = null;
         classAdapterCache = null;
         interfaceAdapterCache = null;
+        typeCache = null;
     }
 
     /** Check if generated Java classes and Java reflection information is cached. */
@@ -166,6 +169,17 @@ public class ClassCache implements Serializable {
             }
         }
         return classAdapterCache;
+    }
+
+    Map<Type, JavaTypeInfo> getTypeCacheMap() {
+        if (typeCache == null) {
+            synchronized (this) {
+                if (typeCache == null) {
+                    typeCache = new ConcurrentHashMap<>();
+                }
+            }
+        }
+        return typeCache;
     }
 
     /**
