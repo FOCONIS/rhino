@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package org.mozilla.javascript;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -27,8 +29,8 @@ public class NativeJavaMap extends NativeJavaObject {
     private static final long serialVersionUID = -3786257752907047381L;
 
     private final Map<Object, Object> map;
-    private final TypeInfo keyType;
-    private final TypeInfo valueType;
+    private transient TypeInfo keyType;
+    private transient TypeInfo valueType;
 
     static void init(ScriptableObject scope, boolean sealed) {
         NativeJavaMapIterator.init(scope, sealed);
@@ -39,10 +41,18 @@ public class NativeJavaMap extends NativeJavaObject {
         super(scope, map, staticType);
         assert map instanceof Map;
         this.map = (Map<Object, Object>) map;
+        recalculateTypes();
+    }
 
-        var typeFactory = TypeInfoFactory.getOrElse(scope, TypeInfoFactory.GLOBAL);
+    private void recalculateTypes() {
+        var typeFactory = TypeInfoFactory.getOrElse(parent, TypeInfoFactory.GLOBAL);
         this.keyType = typeFactory.consolidateType(MapTypeVariables.K, staticType);
         this.valueType = typeFactory.consolidateType(MapTypeVariables.V, staticType);
+    }
+
+    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+        in.defaultReadObject();
+        recalculateTypes();
     }
 
     @Override
@@ -66,7 +76,7 @@ public class NativeJavaMap extends NativeJavaObject {
         Context cx = Context.getCurrentContext();
         if (cx != null && cx.hasFeature(Context.FEATURE_ENABLE_JAVA_MAP_ACCESS)) {
             var key = Integer.valueOf(index);
-            if (map.containsKey(key)) {
+            if (map.containsKey(key) || map.containsKey(String.valueOf(index))) {
                 return true;
             }
         }
@@ -96,10 +106,15 @@ public class NativeJavaMap extends NativeJavaObject {
     public Object get(int index, Scriptable start) {
         Context cx = Context.getCurrentContext();
         if (cx != null && cx.hasFeature(Context.FEATURE_ENABLE_JAVA_MAP_ACCESS)) {
-            var key = Integer.valueOf(index);
+            Object key = Integer.valueOf(index);
             if (map.containsKey(key)) {
                 return cx.getWrapFactory().wrap(cx, this, map.get(key), valueType);
             }
+            key = String.valueOf(index);
+            if (map.containsKey(key)) {
+                return cx.getWrapFactory().wrap(cx, this, map.get(key), valueType);
+            }
+            return Scriptable.NOT_FOUND;
         }
         return super.get(index, start);
     }
@@ -116,7 +131,11 @@ public class NativeJavaMap extends NativeJavaObject {
     public void put(String name, Scriptable start, Object value) {
         Context cx = Context.getCurrentContext();
         if (cx != null && cx.hasFeature(Context.FEATURE_ENABLE_JAVA_MAP_ACCESS)) {
-            map.put(name, Context.jsToJava(value, valueType));
+            if (keyType.asClass().isAssignableFrom(String.class)) {
+                map.put(name, Context.jsToJava(value, valueType));
+            } else {
+                reportConversionError(name, keyType);
+            }
         } else {
             super.put(name, start, value);
         }
@@ -126,7 +145,13 @@ public class NativeJavaMap extends NativeJavaObject {
     public void put(int index, Scriptable start, Object value) {
         Context cx = Context.getCurrentContext();
         if (cx != null && cx.hasFeature(Context.FEATURE_ENABLE_JAVA_MAP_ACCESS)) {
-            map.put(index, Context.jsToJava(value, valueType));
+            if (keyType.asClass().isAssignableFrom(Integer.class)) {
+                map.put(index, Context.jsToJava(value, valueType));
+            } else if (keyType.asClass().isAssignableFrom(String.class)) {
+                map.put(String.valueOf(index), Context.jsToJava(value, valueType));
+            } else {
+                reportConversionError(index, keyType);
+            }
         } else {
             super.put(index, start, value);
         }

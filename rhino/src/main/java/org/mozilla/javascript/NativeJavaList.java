@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package org.mozilla.javascript;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.util.ArrayList;
 import java.util.List;
 import org.mozilla.javascript.lc.type.TypeInfo;
@@ -46,16 +48,24 @@ public class NativeJavaList extends NativeJavaObject {
     private static final long serialVersionUID = 660285467829047519L;
 
     private final List<Object> list;
-    private final TypeInfo elementType;
+    private transient TypeInfo elementType;
 
     @SuppressWarnings("unchecked")
     public NativeJavaList(Scriptable scope, Object list, TypeInfo staticType) {
         super(scope, list, staticType);
         assert list instanceof List;
         this.list = (List<Object>) list;
+        recalculateTypes();
+    }
 
-        var typeFactory = TypeInfoFactory.getOrElse(scope, TypeInfoFactory.GLOBAL);
+    private void recalculateTypes() {
+        var typeFactory = TypeInfoFactory.getOrElse(parent, TypeInfoFactory.GLOBAL);
         this.elementType = typeFactory.consolidateType(ListTypeVariables.E, staticType);
+    }
+
+    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+        in.defaultReadObject();
+        recalculateTypes();
     }
 
     @Override
