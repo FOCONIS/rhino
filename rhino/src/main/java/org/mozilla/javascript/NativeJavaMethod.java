@@ -9,6 +9,7 @@ package org.mozilla.javascript;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import org.mozilla.javascript.lc.ReflectUtils;
@@ -415,12 +416,12 @@ public class NativeJavaMethod extends BaseFunction {
         int totalPreference = 0;
         for (int j = 0; j < args.length; j++) {
             final var type1 =
-                    member1.isVarArgs() && j >= types1.size()
-                            ? types1.get(types1.size() - 1)
+                    member1.isVarArgs() && j >= types1.size() - 1
+                            ? extractVarargType(args, j, types1)
                             : types1.get(j);
             final var type2 =
-                    member2.isVarArgs() && j >= types2.size()
-                            ? types2.get(types2.size() - 1)
+                    member2.isVarArgs() && j >= types2.size() - 1
+                            ? extractVarargType(args, j, types2)
                             : types2.get(j);
             if (type1.asClass() == type2.asClass()) {
                 continue;
@@ -464,7 +465,31 @@ public class NativeJavaMethod extends BaseFunction {
                 break;
             }
         }
+        if (totalPreference == PREFERENCE_EQUAL && member1.isVarArgs() != member2.isVarArgs()) {
+            return member1.isVarArgs() ? PREFERENCE_SECOND_ARG : PREFERENCE_FIRST_ARG;
+        }
         return totalPreference;
+    }
+
+    /**
+     * Determines weather to use the array component's type of a vararg or the array itself as an
+     * argument type.
+     */
+    private static TypeInfo extractVarargType(
+            Object[] args, int argIndex, List<TypeInfo> methodArgTypes) {
+        final int varargIndex = methodArgTypes.size() - 1;
+        final var varargArrayType = methodArgTypes.get(varargIndex);
+        // If the argument for the vararg method is the last, and it is null or an array, use the
+        // vararg array type
+        if (argIndex == varargIndex
+                && args.length == methodArgTypes.size()
+                && (args[argIndex] == null
+                        || args[argIndex] instanceof NativeArray
+                        || args[argIndex] instanceof NativeJavaArray)) {
+            return varargArrayType;
+        }
+
+        return varargArrayType.getComponentType();
     }
 
     /**
