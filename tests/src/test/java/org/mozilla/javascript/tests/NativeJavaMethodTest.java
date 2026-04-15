@@ -3,6 +3,7 @@ package org.mozilla.javascript.tests;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mozilla.javascript.Context;
@@ -31,6 +32,10 @@ public class NativeJavaMethodTest {
             captured.add("1.2");
         }
 
+        public void f1(String s, MethodDummy... varargObj) {
+            captured.add("1.N");
+        }
+
         public void f2(String s1, String s2) {
             captured.add("2");
         }
@@ -41,6 +46,14 @@ public class NativeJavaMethodTest {
 
         public void fN(String s1, String s2, String... sN) {
             captured.add("N." + sN.length);
+        }
+
+        public void f3(Map<String, String> m, String... sN) {
+            captured.add("3.N");
+        }
+
+        public void f3(Map<String, String> m, Class<?> c, String... sN) {
+            captured.add("3.C.N");
         }
     }
 
@@ -100,11 +113,20 @@ public class NativeJavaMethodTest {
     @Test
     void overload() {
         expect(
-                Arrays.asList("1", "1.2", "1.1", "1.2"),
+                Arrays.asList("1", "1.2", "1.1", "1.N", "1.2"),
                 "d.f1('xxx');",
                 "d.f1('x', 'y');",
                 "d.f1('x', 3);",
+                "d.f1('x', d);",
                 "d.f1('x', '3');");
+    }
+
+    @Test
+    void overloadClass() {
+        expect(
+                Arrays.asList("3.N", "3.C.N"),
+                "d.f3({'foo':'bar'}, 'baz');",
+                "d.f3({'foo':'bar'}, java.lang.String, 'baz');");
     }
 
     @Test
